@@ -10,7 +10,8 @@ DATABASES = {
     }
 }
 
-INSTALLED_APPS = ('actrack',
+INSTALLED_APPS = ('gm2m',
+                  'actrack',
                   'django_nose')
 
 MIDDLEWARE_CLASSES = ()  # for django 1.7 not to complain!

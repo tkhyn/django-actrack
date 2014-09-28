@@ -49,5 +49,6 @@ setup(
     packages=find_packages(exclude=('tests',)),
     install_requires=(
       'django>=1.4',
+      'django-gm2m',
     ),
 )
