@@ -10,9 +10,11 @@ DATABASES = {
     }
 }
 
-INSTALLED_APPS = ('gm2m',
+INSTALLED_APPS = ('django.contrib.auth',
+                  'django.contrib.contenttypes',
                   'actrack',
-                  'django_nose')
+                  'django_nose',
+                  'tests.app')
 
 MIDDLEWARE_CLASSES = ()  # for django 1.7 not to complain!
 
