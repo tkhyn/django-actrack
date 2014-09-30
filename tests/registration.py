@@ -1,4 +1,4 @@
-from django.utils.unittest import TestCase
+from ._base import TestCase
 
 import actrack
 from actrack.models import Action

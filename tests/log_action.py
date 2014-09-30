@@ -2,11 +2,10 @@
 Logs actions using the actrack.log signal sending function
 """
 
-from  django.utils.unittest import TestCase
+from ._base import TestCase
 
 import actrack
 from actrack.models import Action
-from actrack.compat import get_user_model
 
 from .app.models import Project
 
@@ -14,7 +13,7 @@ from .app.models import Project
 class CreationTests(TestCase):
 
     def setUp(self):
-        self.user = get_user_model().objects.create()
+        self.user = self.user_model.objects.create(username='user')
         self.project = Project.objects.create()
 
     def test_send_signal(self):

@@ -39,9 +39,11 @@ class Tracker(models.Model):
     """
 
     user = models.ForeignKey(AUTH_USER_MODEL)
-    tracked = GM2MField()
+
+    tracked_ct = models.ForeignKey(ContentType, related_name='tracked')
+    tracked_pk = models.CharField(max_length=255)
+    tracked = generic.GenericForeignKey('tracked_ct', 'tracked_pk')
 
     verbs = VerbsField(max_length=1000)
-
 
 load_app()
