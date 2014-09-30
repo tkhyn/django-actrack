@@ -12,9 +12,8 @@ def add_relation(tgt, field, name=None, related_name=None):
         name = '%s_as_%s' % (get_model_name(field.model), field.name)
 
     if not related_name:
-        related_name = '%s_with_%s_as_%s' % (
+        related_name = '%s_with_%(class)s_as_%s' % (
             get_model_name(field.model),
-            get_model_name(tgt),
             field.name
         )
 

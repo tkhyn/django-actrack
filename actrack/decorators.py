@@ -1,6 +1,5 @@
 from .gfk import add_relation
 from .models import Action
-from .compat import get_model_name
 
 
 def track(cls):
@@ -11,6 +10,6 @@ def track(cls):
     Action.related.add_relation(cls)
 
     add_relation(cls, Action.actor, 'actions_as_actor',
-                 'actions_with_%s_as_actor' % get_model_name(cls))
+                 'actions_with_%(class)s_as_actor')
 
     return cls
