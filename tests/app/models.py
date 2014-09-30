@@ -1,5 +1,6 @@
 from django.db import models
-from actrack import track
+
+import actrack
 
 
 class Base(models.Model):
@@ -10,11 +11,11 @@ class Base(models.Model):
         abstract = True
 
 
-@track
+@actrack.connect
 class Project(Base):
     pass
 
 
-@track
+@actrack.connect
 class Task(Base):
     parent = models.ForeignKey(Project)

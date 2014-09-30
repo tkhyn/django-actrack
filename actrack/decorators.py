@@ -2,9 +2,10 @@ from .gfk import add_relation
 from .models import Action
 
 
-def track(cls):
+def connect(cls):
     """
-    Model decorator
+    Model decorator to create relationships between the given model class
+    and the Action model
     """
     Action.changed.add_relation(cls)
     Action.related.add_relation(cls)

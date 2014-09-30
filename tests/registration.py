@@ -1,6 +1,6 @@
 from django.utils.unittest import TestCase
 
-from actrack import track
+import actrack
 from actrack.models import Action
 
 from .app.models import Base, Project, Task
@@ -10,10 +10,10 @@ class RegistrationTestCases(TestCase):
 
     def test_track_abstract_model(self):
         """
-        It is not allowed to track abstract models
+        It is not allowed to connect abstract models
         """
         with self.assertRaises(AssertionError):
-            track(Base)
+            actrack.connect(Base)
 
     def test_model_relations(self):
         """
