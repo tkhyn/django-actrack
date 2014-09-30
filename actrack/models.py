@@ -11,6 +11,7 @@ from gm2m import GM2MField
 
 from .settings import AUTH_USER_MODEL
 from .fields import VerbsField
+from .compat import load_app
 
 
 class Action(models.Model):
@@ -41,3 +42,6 @@ class Tracker(models.Model):
     tracked = GM2MField()
 
     verbs = VerbsField(max_length=1000)
+
+
+load_app()

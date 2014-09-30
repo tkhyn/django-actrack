@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.generic import GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 from .compat import related_attr_name, get_model_name
 
@@ -24,3 +25,7 @@ def add_relation(tgt, field, name=None, related_name=None):
     }
     GenericRelation('actrack.Action', **kwargs) \
         .contribute_to_class(tgt, name)
+
+
+def get_content_type(obj):
+    return ContentType.objects.db_manager(obj._state.db).get_for_model(obj)
