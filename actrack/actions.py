@@ -42,13 +42,15 @@ def create_action(verb, **kwargs):
     return action
 
 
-def track(user, to_track, verbs=None, log=False):
+def track(user, to_track, verbs=None, actor_only=True, log=False):
     """
     Enables a user to track objects or change his tracking options for these
     objects
 
     :param to_track: the object(s) to track
     :param verbs: the verbs to track. None means 'track all verbs'.
+    :param actor_only: should we track actions only when the object is the
+                       actor?
     :param log: should an action be logged if a tracker is created?
     """
 
@@ -80,7 +82,8 @@ def track(user, to_track, verbs=None, log=False):
     for obj in untracked_objs:
         trackers.append(Tracker.objects.create(user=user,
                                                tracked=obj,
-                                               verbs=verbs))
+                                               verbs=verbs,
+                                               actor_only=actor_only))
     if log and untracked_objs:
         log_action(user, verb=_('started tracking'), changed=untracked_objs)
 

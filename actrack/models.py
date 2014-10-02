@@ -20,12 +20,15 @@ class Action(models.Model):
     may be related to other objects
     """
 
-    actor_ct = models.ForeignKey(ContentType, related_name='actor')
+    actor_ct = models.ForeignKey(ContentType)
     actor_pk = models.CharField(max_length=255)
     actor = generic.GenericForeignKey('actor_ct', 'actor_pk')
 
-    changed = GM2MField(related_name='actions_as_changed')
-    related = GM2MField(related_name='actions_as_related')
+    # using hidden relations so that the related objects' model classes are
+    # not cluttered. The reverse relations are available through the
+    # RelatedModel's ``actions`` attribute (as a manager) and its methods
+    changed = GM2MField(related_name='actions_as_changed+')
+    related = GM2MField(related_name='actions_as_related+')
 
     verb = models.CharField(max_length=255)
 
@@ -38,12 +41,16 @@ class Tracker(models.Model):
     objects
     """
 
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    # hidden relation (accessible using the model instance's ``tracker``
+    # attribute and its methods
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='trackers+')
 
-    tracked_ct = models.ForeignKey(ContentType, related_name='tracked')
+    tracked_ct = models.ForeignKey(ContentType)
     tracked_pk = models.CharField(max_length=255)
     tracked = generic.GenericForeignKey('tracked_ct', 'tracked_pk')
 
     verbs = VerbsField(max_length=1000)
+
+    actor_only = models.BooleanField(default=True)
 
 load_app()

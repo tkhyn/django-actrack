@@ -6,7 +6,7 @@ from .compat import related_attr_name, get_model_name
 
 def add_relation(tgt, field, name=None, related_name=None):
     """
-    Creates a generic reverse relation from a target model to the source model
+    Creates a reverse relation from a target model to the source model
     relative to the specified field
     """
     if not name:

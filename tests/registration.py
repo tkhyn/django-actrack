@@ -1,7 +1,10 @@
-from ._base import TestCase
+from django.db.models import Manager
 
 import actrack
-from actrack.models import Action
+from actrack.models import Action, Tracker
+from actrack.descriptors import ActrackDescriptor
+
+from ._base import TestCase
 
 from .app.models import Base, Project, Task
 
@@ -17,10 +20,11 @@ class RegistrationTestCases(TestCase):
 
     def test_model_relations(self):
         """
-        Check that the relations are correctly setup
+        Check that the managers and relations are correctly set up
         """
         for m in (Project, Task):
-            self.assertIs(m.actions_as_related.related.model, Action)
-            self.assertIs(m.actions_as_changed.related.model, Action)
-            self.assertIs(m.actions_as_actor.field.related.parent_model,
-                          Action)
+            for attr, model in (('actions', Action), ('trackers', Tracker)):
+                self.assertTrue(isinstance(getattr(m, attr),
+                                           ActrackDescriptor))
+                self.assertTrue(issubclass(getattr(m, attr).manager_cls,
+                                           Manager))
