@@ -17,7 +17,7 @@ class CreationTests(TestCase):
         self.project = Project.objects.create()
 
     def test_send_signal(self):
-        actrack.log(self.user, verb='tests', related=self.project)
+        actrack.log(self.user, 'tests', related=self.project)
         self.assertEqual(len(Action.objects.all()), 1)
         created_action = Action.objects.all()[0]
         self.assertEqual(list(created_action.related.all()), [self.project])
