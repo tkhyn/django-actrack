@@ -53,4 +53,18 @@ class Tracker(models.Model):
 
     actor_only = models.BooleanField(default=True)
 
+
+class DeletedItem(models.Model):
+    """
+    A model to keep track of objects that have been deleted but that still
+    need to be linked by Action instances
+    """
+
+    ctype = models.ForeignKey(ContentType)
+    description = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.description
+
+
 load_app()

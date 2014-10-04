@@ -3,7 +3,6 @@ from django.utils import six
 from django.utils.translation import ugettext as _
 from django.db.models import Q
 
-
 from .models import Action, Tracker
 from .gfk import get_content_type
 from .signals import log as log_action

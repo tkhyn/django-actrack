@@ -14,13 +14,16 @@ class Base(models.Model):
 
 @actrack.connect
 class Project(Base):
-    pass
+    def deleted_item_description(self):
+        return 'Project %d' % id(self)
 
 
 @actrack.connect
 class Task(Base):
     parent = models.ForeignKey(Project)
 
+    def deleted_item_description(self):
+        return 'Task %d' % id(self)
 
 if django.VERSION < (1, 7):
     from .apps import TestAppConfig

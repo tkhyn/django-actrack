@@ -78,7 +78,7 @@ class ActionManager(ActrackInstManager):
     def _get_relation(self, name):
 
         # find the relation
-        for rel in getattr(Action, name).field.rels.rels:
+        for rel in getattr(Action, name).field.rel.rels:
             if rel.to == self.instance_model:
                 return rel
         else:
