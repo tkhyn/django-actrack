@@ -7,6 +7,7 @@ from django.template.base import Context
 from django.utils import six
 
 from gm2m import GM2MField
+from jsonfield import JSONField
 
 from .managers.default import DefaultActionManager
 from .settings import AUTH_USER_MODEL, TRACK_UNREAD, AUTO_READ
@@ -31,6 +32,8 @@ class Action(models.Model):
     related = GM2MField(related_name='actions_as_related+')
 
     verb = models.CharField(max_length=255)
+
+    data = JSONField(blank=True, null=True)
 
     timestamp = models.DateTimeField(default=now)
 

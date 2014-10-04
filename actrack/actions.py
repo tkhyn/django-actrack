@@ -14,11 +14,19 @@ def create_action(verb, **kwargs):
     Creates an action
     """
 
+    # removes the 'signal' keyword in kwargs so that it is not taken into
+    # account in the action's data
+    kwargs.pop('signal', None)
+
     try:
         # Try and retrieve untranslated verb if applicable
         verb = verb._proxy__args[0]
     except (AttributeError, IndexError):
         pass
+
+    gm2ms = {}
+    for attr in ('changed', 'related'):
+        gm2ms[attr] = kwargs.pop(attr, None)
 
     # set 'normal' fields
     actor = kwargs.pop('sender')
@@ -26,12 +34,13 @@ def create_action(verb, **kwargs):
         actor_ct=get_content_type(actor),
         actor_pk=actor._get_pk_val(),
         verb=six.text_type(verb),
-        timestamp=kwargs.pop('timestamp', now())
+        timestamp=kwargs.pop('timestamp', now()),
+        data=kwargs
     )
 
     # set many-to-many fields
     for attr in ('changed', 'related'):
-        l = kwargs.pop(attr, None)
+        l = gm2ms[attr]
         if l is None:
             continue  # nothing to do
         elif not isinstance(l, (tuple, list, set)):
