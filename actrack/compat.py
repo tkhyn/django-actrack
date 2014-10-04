@@ -5,6 +5,10 @@ from django.db import models
 from django.db.models.options import Options
 from django.utils import six
 
+try:
+    from django.utils.timezone import now
+except ImportError:
+    from datetime.datetime import now
 
 try:
     from django.apps import AppConfig

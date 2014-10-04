@@ -5,6 +5,8 @@ _DEFAULTS = dict(
     AUTH_USER_MODEL=getattr(settings, 'AUTH_USER_MODEL', 'auth.User'),
     ACTIONS_ATTR='actions',
     TRACKERS_ATTR='trackers',
+    TRACK_UNREAD=True,
+    AUTO_READ=True
 )
 
 __all__ = list(_DEFAULTS.keys())

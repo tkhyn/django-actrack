@@ -146,6 +146,12 @@ class InstActionManager(InstActrackManager):
                 if not t.actor_only:
                     obct[pk] = None
 
+            # mark any new message matching the tracker as unread if required
+            # we do it here because it's more efficient to collect a bunch
+            # of unread actions matching the tracker now than searching and
+            # updating every tracker on action creation
+            t.update_unread()
+
         # now we've got a dictionary actors_by_ct containing all the verbs to
         # be tracked, listed by content type and pks of tracked objects
         # from that we build a query to filter Action objects
