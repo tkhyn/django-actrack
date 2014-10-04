@@ -9,6 +9,7 @@ from django.contrib.contenttypes import generic
 
 from gm2m import GM2MField
 
+from .managers.default import DefaultActionManager
 from .settings import AUTH_USER_MODEL
 from .fields import VerbsField
 from .compat import load_app
@@ -33,6 +34,9 @@ class Action(models.Model):
     verb = models.CharField(max_length=255)
 
     timestamp = models.DateTimeField(default=now)
+
+    # default manager
+    objects = DefaultActionManager()
 
 
 class Tracker(models.Model):

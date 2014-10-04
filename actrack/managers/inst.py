@@ -1,5 +1,9 @@
 """
 Action and Tracker dynamic managers definition
+
+They need to be initialized with an object instance
+They are set as accessors when connecting a Model to the action tracker and
+can be accessed via 'actions' or 'trackers' attributes on object instances
 """
 
 from collections import defaultdict
@@ -9,19 +13,19 @@ from django.db import router
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.six import iteritems
 
-from .models import Action, Tracker
-from .settings import TRACKERS_ATTR
-from .gfk import get_content_type
-from .compat import Manager, get_user_model
+from ..models import Action, Tracker
+from ..settings import TRACKERS_ATTR
+from ..gfk import get_content_type
+from ..compat import Manager, get_user_model
 
 
-class ActrackInstManager(Manager):
+class InstActrackManager(Manager):
     """
     A manager that retrieves entries concerning one instance only
     """
 
     def __init__(self, instance):
-        super(ActrackInstManager, self).__init__()
+        super(InstActrackManager, self).__init__()
         self.instance = instance
         self.instance_model = instance.__class__
         self._db = router.db_for_read(self.model)
@@ -33,16 +37,16 @@ class ActrackInstManager(Manager):
         """
         To call when one wants a shortcut to the unfiltered queryset
         """
-        return super(ActrackInstManager, self).get_queryset()
+        return super(InstActrackManager, self).get_queryset()
 
 
-class ActionManager(ActrackInstManager):
+class InstActionManager(InstActrackManager):
     """
     This manager retrieves Action instances that are linked to the instance
     """
 
     def __init__(self, instance):
-        super(ActionManager, self).__init__(instance)
+        super(InstActionManager, self).__init__(instance)
         self.model = Action
 
     def get_queryset(self):
@@ -64,7 +68,7 @@ class ActionManager(ActrackInstManager):
                 'action_%s__gm2m_pk' % a: pk
             })
 
-        return super(ActionManager, self).get_queryset().filter(q)
+        return super(InstActionManager, self).get_queryset().filter(q)
 
     def as_actor(self):
         """
@@ -175,10 +179,10 @@ class ActionManager(ActrackInstManager):
         return self.get_unfiltered_queryset().filter(q)
 
 
-class TrackerManager(ActrackInstManager):
+class InstTrackerManager(InstActrackManager):
 
     def __init__(self, instance):
-        super(TrackerManager, self).__init__(instance)
+        super(InstTrackerManager, self).__init__(instance)
         self.model = Tracker
 
     def get_queryset(self):
@@ -194,7 +198,7 @@ class TrackerManager(ActrackInstManager):
         if self.is_user:
             q = q | Q(user=self.instance)
 
-        return super(TrackerManager, self).get_queryset().filter(q)
+        return super(InstTrackerManager, self).get_queryset().filter(q)
 
     def tracking(self):
         """

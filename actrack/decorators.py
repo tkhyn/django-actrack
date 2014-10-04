@@ -1,7 +1,7 @@
 from .gfk import add_relation
 from .models import Action, Tracker
 from .descriptors import ActrackDescriptor
-from .managers import ActionManager, TrackerManager
+from .managers.inst import InstActionManager, InstTrackerManager
 from .settings import ACTIONS_ATTR, TRACKERS_ATTR
 from .deletion import CASCADE, DO_NOTHING_SIGNAL
 from .compat import get_model_name
@@ -59,8 +59,8 @@ def connect(*args, **kwargs):
                 descriptor.field.rel.on_delete_tgt = on_delete_tgt
 
             # adding actions and trackers managers
-            for name, mngr in ((ACTIONS_ATTR, ActionManager),
-                               (TRACKERS_ATTR, TrackerManager)):
+            for name, mngr in ((ACTIONS_ATTR, InstActionManager),
+                               (TRACKERS_ATTR, InstTrackerManager)):
                 ActrackDescriptor(mngr).add_to_model(cls, name)
 
             return cls
