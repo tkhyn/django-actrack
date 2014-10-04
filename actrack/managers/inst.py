@@ -11,7 +11,7 @@ from collections import defaultdict
 from django.db.models import Q
 from django.db import router
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.six import iteritems
+from django.utils.six import iteritems, string_types
 
 from ..models import Action, Tracker
 from ..settings import TRACKERS_ATTR
@@ -238,10 +238,12 @@ class InstTrackerManager(InstActrackManager):
         return self.get_unfiltered_queryset().filter(user=self.instance,
                                                      **kwargs)
 
-    def tracked(self):
+    def tracked(self, *models, **kwargs):
         """
         If instance is a user, returns a set of all objects tracked by the
         user. If not, TypeError
+
+        :param models: a list of models
         """
 
         if not self.is_user:
@@ -249,8 +251,17 @@ class InstTrackerManager(InstActrackManager):
                 'Cannot retrieve objects tracked by an object which is not a '
                 'user.')
 
+        verbs = kwargs.pop('verbs', [])
+        if isinstance(verbs, string_types):
+            verbs = [verbs]
+
+        qs = self.owned(**kwargs) \
+                 .filter(ct__in=[get_content_type(m) for m in models]) \
+                 .prefetch_related('tracked')
+
         all_tracked = set()
-        for t in self.owned().prefetch_related('tracked'):
-            all_tracked.add(t.tracked)
+        for t in qs:
+            if not t.verbs or t.verbs.intersection(verbs):
+                all_tracked.add(t.tracked)
 
         return all_tracked
