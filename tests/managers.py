@@ -63,6 +63,7 @@ class ActionManagerTests(ManagerTests):
             self.project.actions.feed()
         self.assertEqual(self.user0.actions.feed().count(), 2)
         self.assertEqual(self.user1.actions.feed().count(), 0)
+        self.assertEqual(self.user1.actions.feed(include_own=True).count(), 2)
         self.assertEqual(self.user2.actions.feed().count(), 2)
 
 

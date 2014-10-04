@@ -101,7 +101,7 @@ class ActionManager(ActrackInstManager):
         rel = self._get_relation('related')
         return rel.related_manager_cls(self.instance).all()
 
-    def feed(self):
+    def feed(self, include_own=False):
         """
         All the actions tracked by the user
         Only applicable if instance is a user object (TypeError thrown if not)
@@ -118,11 +118,17 @@ class ActionManager(ActrackInstManager):
             # all the trackers owned by the user
             trackers = getattr(self.instance, TRACKERS_ATTR).owned()
 
-        if not len(trackers):
-            return self.none()
-
         actors_by_ct = defaultdict(lambda: defaultdict(lambda: []))
         others_by_ct = defaultdict(lambda: defaultdict(lambda: []))
+
+        if self.is_user and include_own:
+            # if all the user's actions should be retrieved as well, pre-fill
+            # actors_by_ct
+            ct = get_content_type(self.instance).pk
+            actors_by_ct[ct][self.instance.pk] = None
+        elif not len(trackers):
+            return self.none()
+
         for t in trackers:
             abct = actors_by_ct[t.tracked_ct_id]
             pk = t.tracked_pk
