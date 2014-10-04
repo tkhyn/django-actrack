@@ -69,13 +69,14 @@ class InstActionManager(InstActrackManager):
 
         return super(InstActionManager, self).get_queryset().filter(q)
 
-    def as_actor(self):
+    def as_actor(self, **kwargs):
         """
         All the actions where instance is the actor
         """
         return self.get_unfiltered_queryset().filter(
             actor_ct=get_content_type(self.instance),
-            actor_pk=self.instance.pk
+            actor_pk=self.instance.pk,
+            **kwargs
         )
 
     def _get_relation(self, name):
@@ -90,21 +91,21 @@ class InstActionManager(InstActrackManager):
                 'model. Please use the actrack.connect decorator on model '
                 '%(model)s.' % {'model': self.instance_model})
 
-    def as_changed(self):
+    def as_changed(self, **kwargs):
         """
         All the actions where the instance is in the changed objects
         """
         rel = self._get_relation('changed')
-        return rel.related_manager_cls(self.instance).all()
+        return rel.related_manager_cls(self.instance).filter(**kwargs)
 
-    def as_related(self):
+    def as_related(self, **kwargs):
         """
         All the actions where the instance is in the related objects
         """
         rel = self._get_relation('related')
-        return rel.related_manager_cls(self.instance).all()
+        return rel.related_manager_cls(self.instance).filter(**kwargs)
 
-    def feed(self, include_own=False):
+    def feed(self, include_own=False, **kwargs):
         """
         All the actions tracked by the user
         Only applicable if instance is a user object (TypeError thrown if not)
@@ -179,7 +180,7 @@ class InstActionManager(InstActrackManager):
                 if verbs:
                     subq = subq & Q(verb__in=verbs)
                 q = q | subq
-        return self.get_unfiltered_queryset().filter(q)
+        return self.get_unfiltered_queryset().filter(q, **kwargs)
 
 
 class InstTrackerManager(InstActrackManager):
@@ -203,26 +204,28 @@ class InstTrackerManager(InstActrackManager):
 
         return super(InstTrackerManager, self).get_queryset().filter(q)
 
-    def tracking(self):
+    def tracking(self, **kwargs):
         """
         All Tracker objects tracking the instance
         """
         return self.get_unfiltered_queryset().filter(
             tracked_ct=get_content_type(self.instance),
-            tracked_pk=self.instance.pk
+            tracked_pk=self.instance.pk,
+            **kwargs
         )
 
-    def users(self):
+    def users(self, **kwargs):
         """
         All the users tracking the instance
         """
         # fetch all trackers tracking the instance, get the user id and call
         # the user manager
         return get_user_model().objects.filter(
-            pk__in=set(self.tracking().values_list('user_id', flat=True))
+            pk__in=set(self.tracking().values_list('user_id', flat=True)),
+            **kwargs
         )
 
-    def owned(self):
+    def owned(self, **kwargs):
         """
         If instance is a user, all Tracker objects tracked by the user.
         If not, TypeError
@@ -232,7 +235,8 @@ class InstTrackerManager(InstActrackManager):
                 'Cannot retrieve trackers owned by an object which is not a '
                 'user.')
 
-        return self.get_unfiltered_queryset().filter(user=self.instance)
+        return self.get_unfiltered_queryset().filter(user=self.instance,
+                                                     **kwargs)
 
     def tracked(self):
         """

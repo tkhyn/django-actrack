@@ -7,7 +7,7 @@ from django.db.models import Manager, Q
 
 class DefaultActionManager(Manager):
 
-    def tracked_by(self, tracker):
+    def tracked_by(self, tracker, **kwargs):
         """
         All the actions that are followed by a tracker
         """
@@ -25,4 +25,4 @@ class DefaultActionManager(Manager):
         if tracker.verbs:
             q = q & Q(verb__in=tracker.verbs)
 
-        return self.filter(q)
+        return self.filter(q, **kwargs)
