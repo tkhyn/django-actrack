@@ -163,14 +163,16 @@ class InstActionManager(InstActrackManager):
         # now we take care of changed and related objects
         for ct, pk_verbs in iteritems(others_by_ct):
             for pk, verbs in iteritems(pk_verbs):
-                kws_changed = dict(action_changed__gm2m_ct=ct,
-                                   action_changed__gm2m_pk=pk)
-                kws_related = dict(action_related__gm2m_ct=ct,
-                                   action_related__gm2m_pk=pk)
+                subq = Q(
+                    action_changed__gm2m_ct=ct,
+                    action_changed__gm2m_pk=pk
+                ) | Q(
+                    action_related__gm2m_ct=ct,
+                    action_related__gm2m_pk=pk
+                )
                 if verbs:
-                    kws_changed['verb__in'] = \
-                    kws_related['verb__in'] = verbs
-                q = q | Q(**kws_changed) | Q(**kws_related)
+                    subq = subq & Q(verb__in=verbs)
+                q = q | subq
         return self.get_unfiltered_queryset().filter(q)
 
 
