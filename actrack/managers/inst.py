@@ -31,7 +31,6 @@ class InstActrackManager(Manager):
         self._db = router.db_for_read(self.model)
 
         self.is_user = self.instance_model == get_user_model()
-        self.is_tracker = self.instance_model == Tracker
 
     def get_unfiltered_queryset(self):
         """
@@ -111,21 +110,17 @@ class InstActionManager(InstActrackManager):
         Only applicable if instance is a user object (TypeError thrown if not)
         """
 
-        if not (self.is_user or self.is_tracker):
+        if not self.is_user:
             raise TypeError(
-                'Cannot call "feed" on an object which is not a user or a '
-                'tracker.')
+                'Cannot call "feed" on an object which is not a user.')
 
-        if self.is_tracker:
-            trackers = [self.instance]
-        else:
-            # all the trackers owned by the user
-            trackers = getattr(self.instance, TRACKERS_ATTR).owned()
+        # all the trackers owned by the user
+        trackers = getattr(self.instance, TRACKERS_ATTR).owned()
 
         actors_by_ct = defaultdict(lambda: defaultdict(lambda: []))
         others_by_ct = defaultdict(lambda: defaultdict(lambda: []))
 
-        if self.is_user and include_own:
+        if include_own:
             # if all the user's actions should be retrieved as well, pre-fill
             # actors_by_ct
             ct = get_content_type(self.instance).pk
