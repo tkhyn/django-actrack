@@ -41,21 +41,21 @@ def create_action(verb, **kwargs):
     return action
 
 
-def track(user, to_track, verbs=None, actor_only=True, log=False):
+def track(user, to_track, log=False, **kwargs):
     """
     Enables a user to track objects or change his tracking options for these
-    objects
+    objects.
 
     :param to_track: the object(s) to track
-    :param verbs: the verbs to track. None means 'track all verbs'.
-    :param actor_only: should we track actions only when the object is the
-                       actor?
     :param log: should an action be logged if a tracker is created?
+    :param verbs (kwarg): the verbs to track. None means 'track all verbs'
+    :param actor_only (kwarg): should we track actions only when the object is
+                               the actor?
     """
 
     # convert to_track and verbs to sets
     to_track = to_set(to_track)
-    verbs = to_set(verbs)
+    kwargs['verbs'] = to_set(kwargs.get('verbs', None))
 
     # create query to retrieve matching trackers
     q = Q()
@@ -71,9 +71,15 @@ def track(user, to_track, verbs=None, actor_only=True, log=False):
 
     # modify existing matching trackers if needed
     for tracker in trackers:
-        if tracker.verbs != verbs:
-            tracker.verbs = verbs
+        changed = []
+        for k, v in six.iteritems(kwargs):
+            if getattr(tracker, k, None) != v:
+                changed.append(k)
+            setattr(tracker, k, v)
+
+        if changed:
             tracker.save()
+
         tracked_objs.append(tracker.tracked)
 
     # create trackers to untracked objects
@@ -81,8 +87,7 @@ def track(user, to_track, verbs=None, actor_only=True, log=False):
     for obj in untracked_objs:
         trackers.append(Tracker.objects.create(user=user,
                                                tracked=obj,
-                                               verbs=verbs,
-                                               actor_only=actor_only))
+                                               **kwargs))
     if log and untracked_objs:
         log_action(user, verb=_('started tracking'), changed=untracked_objs)
 
