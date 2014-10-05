@@ -16,7 +16,7 @@ _DEFAULTS = dict(
 
 __all__ = list(_DEFAULTS.keys())
 
-_SETTINGS = getattr(settings, 'ACTRACK_SETTINGS', {})
+_SETTINGS = getattr(settings, 'ACTRACK', {})
 
 for name, value in six.iteritems(_DEFAULTS):
     globals()[name] = _SETTINGS.get(name, value)
