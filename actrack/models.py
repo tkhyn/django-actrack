@@ -65,9 +65,7 @@ class Action(models.Model):
             if 'unread' not in dic:
                 dic['unread'] = self.is_unread(user)
 
-        data = getattr(self, 'data', None)
-        if data:
-            dic.update(data)
+        dic.update(getattr(self, 'data', {}))
 
         templates = self.get_templates()
         return render_to_string(templates, dic, context)
