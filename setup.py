@@ -50,5 +50,6 @@ setup(
     install_requires=(
       'django>=1.4',
       'django-gm2m',
+      'django-jsonfield',
     ),
 )
