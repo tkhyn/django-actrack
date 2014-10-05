@@ -25,7 +25,7 @@ def create_action(verb, **kwargs):
         pass
 
     gm2ms = {}
-    for attr in ('changed', 'related'):
+    for attr in ('targets', 'related'):
         gm2ms[attr] = kwargs.pop(attr, None)
 
     # set 'normal' fields
@@ -39,7 +39,7 @@ def create_action(verb, **kwargs):
     )
 
     # set many-to-many fields
-    for attr in ('changed', 'related'):
+    for attr in ('targets', 'related'):
         l = gm2ms[attr]
         if l is None:
             continue  # nothing to do
@@ -80,13 +80,13 @@ def track(user, to_track, log=False, **kwargs):
 
     # modify existing matching trackers if needed
     for tracker in trackers:
-        changed = []
+        targets = []
         for k, v in six.iteritems(kwargs):
             if getattr(tracker, k, None) != v:
-                changed.append(k)
+                targets.append(k)
             setattr(tracker, k, v)
 
-        if changed:
+        if targets:
             tracker.save()
 
         tracked_objs.append(tracker.tracked)
@@ -98,7 +98,7 @@ def track(user, to_track, log=False, **kwargs):
                                                tracked=obj,
                                                **kwargs))
     if log and untracked_objs:
-        log_action(user, verb=_('started tracking'), changed=untracked_objs)
+        log_action(user, verb=_('started tracking'), targets=untracked_objs)
 
 
 def untrack(user, to_untrack, verbs=None, log=False):
@@ -153,4 +153,4 @@ def untrack(user, to_untrack, verbs=None, log=False):
             Tracker.objects.filter(id__in=set(to_untrack)).update(verbs=verbs)
 
     if untracked_objs:  # no need to check for log
-        log_action(user, verb=_('stopped tracking'), changed=untracked_objs)
+        log_action(user, verb=_('stopped tracking'), targets=untracked_objs)

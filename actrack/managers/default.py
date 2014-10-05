@@ -17,11 +17,11 @@ class DefaultActionManager(Manager):
 
         q = Q(actor_ct=ct, actor_pk=pk)
         if not tracker.actor_only:
-            kws_changed = dict(action_changed__gm2m_ct=ct,
-                               action_changed__gm2m_pk=pk)
+            kws_targets = dict(action_targets__gm2m_ct=ct,
+                               action_targets__gm2m_pk=pk)
             kws_related = dict(action_related__gm2m_ct=ct,
                                action_related__gm2m_pk=pk)
-            q = q | Q(**kws_changed) | Q(**kws_related)
+            q = q | Q(**kws_targets) | Q(**kws_related)
         if tracker.verbs:
             q = q & Q(verb__in=tracker.verbs)
 

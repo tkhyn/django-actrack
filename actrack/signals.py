@@ -1,7 +1,7 @@
 from django.dispatch import Signal
 
 # a signal to log an action
-log_action = Signal(providing_args=['verb', 'changed', 'related', 'timestamp'])
+log_action = Signal(providing_args=['verb', 'targets', 'related', 'timestamp'])
 
 
 def log(actor, verb, **kwargs):

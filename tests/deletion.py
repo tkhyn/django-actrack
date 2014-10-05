@@ -30,21 +30,21 @@ class DeletionTests(TestCase):
 
         actrack.track(self.user0, self.project, actor_only=False)
 
-        actrack.log(self.user0, 'created', changed=self.project)
-        actrack.log(self.user0, 'created', changed=self.task1,
+        actrack.log(self.user0, 'created', targets=self.project)
+        actrack.log(self.user0, 'created', targets=self.task1,
                     related=self.project)
-        actrack.log(self.user0, 'created', changed=self.task2,
+        actrack.log(self.user0, 'created', targets=self.task2,
                     related=self.project)
-        actrack.log(self.user0, 'created', changed=self.task3,
+        actrack.log(self.user0, 'created', targets=self.task3,
                     related=self.project)
 
-    def test_delete_changed(self):
+    def test_delete_targets(self):
         self.task1.delete()
         self.assertEqual(DeletedItem.objects.count(), 1)
         self.assertEqual(Action.objects.count(), 4)
         ct = get_content_type(DeletedItem)
         self.assertEqual(
-            Action.objects.filter(action_changed__gm2m_ct=ct).count(), 1)
+            Action.objects.filter(action_targets__gm2m_ct=ct).count(), 1)
 
     def test_delete_related_tracked(self):
         # this will delete the tasks as well
@@ -62,7 +62,7 @@ class DeletionTests(TestCase):
         self.assertEqual(Action.objects.count(), 4)
         ct = get_content_type(DeletedItem)
         self.assertEqual(
-            Action.objects.filter(action_changed__gm2m_ct=ct).count(), 4)
+            Action.objects.filter(action_targets__gm2m_ct=ct).count(), 4)
         self.assertEqual(
             Action.objects.filter(action_related__gm2m_ct=ct).count(), 3)
         self.assertEqual(

@@ -52,7 +52,7 @@ def connect(*args, **kwargs):
                 delattr(cls, rel_name)
 
             # adding hidden gm2m relations and modifying on_delete handlers
-            for attr in ('changed', 'related'):
+            for attr in ('targets', 'related'):
                 descriptor = getattr(Action, attr)
                 descriptor.add_relation(cls)
                 descriptor.field.rel.on_delete_src = on_delete_src

@@ -25,6 +25,6 @@ class CreationTests(TestCase):
         self.assertEqual(created_action.actor, self.user)
 
     def test_data(self):
-        actrack.log(self.user, 'tests', changed=self.project, my_data=0)
+        actrack.log(self.user, 'tests', targets=self.project, my_data=0)
         created_action = Action.objects.all()[0]
         self.assertEqual(created_action.data['my_data'], 0)

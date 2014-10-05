@@ -49,7 +49,7 @@ class ActrackGenericRelation(GenericRelation):
                 })
 
             # GM2M relations for action model
-            for attname in ('changed', 'related'):
+            for attname in ('targets', 'related'):
                 if hasattr(base_mngr.model, attname):
                     for ct, pks in six.iteritems(objs_by_ct):
                         q = q | Q(**{

@@ -17,7 +17,7 @@ from .compat import now, load_app
 
 class Action(models.Model):
     """
-    Describes an action, initiated by an actor on changed objects, and that
+    Describes an action, initiated by an actor on target objects, and that
     may be related to other objects
     """
 
@@ -28,7 +28,7 @@ class Action(models.Model):
     # using hidden relations so that the related objects' model classes are
     # not cluttered. The reverse relations are available through the
     # RelatedModel's ``actions`` attribute (as a manager) and its methods
-    changed = GM2MField(related_name='actions_as_changed+')
+    targets = GM2MField(related_name='actions_as_targets+')
     related = GM2MField(related_name='actions_as_related+')
 
     verb = models.CharField(max_length=255)

@@ -16,8 +16,8 @@ class UnreadTests(TestCase):
 
         track(self.user0, self.user1, actor_only=True)
 
-        log(self.user1, 'created', changed=self.project)
-        log(self.user1, 'validated', changed=self.project)
+        log(self.user1, 'created', targets=self.project)
+        log(self.user1, 'validated', targets=self.project)
 
     def test_is_unread_for(self):
         action = self.user0.actions.feed()[0]

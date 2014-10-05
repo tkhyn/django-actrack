@@ -34,5 +34,5 @@ class TrackTests(TestCase):
         self.assertEqual(len(actions), 1)
         action = actions[0]
         self.assertEqual(action.actor, self.user)
-        self.assertSetEqual(set(action.changed.all()), set([self.project]))
+        self.assertSetEqual(set(action.targets.all()), set([self.project]))
         self.assertEqual(action.verb, 'started tracking')

@@ -71,6 +71,6 @@ def handle_deleted_items(sender, **kwargs):
                 ct_field_name: delitem_ct, pk_field_name: del_item.pk
             })
         else:
-            # changed or related field update via through model manager
+            # targets or related field update via through model manager
             through_instances.filter(gm2m_ct=inst_ct, gm2m_pk=inst_id) \
                              .update(gm2m_ct=delitem_ct, gm2m_pk=del_item.pk)

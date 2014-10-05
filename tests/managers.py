@@ -26,8 +26,8 @@ class ManagerTests(TestCase):
         actrack.track(self.user0, self.user1)
         actrack.track(self.user2, self.project, actor_only=False)
 
-        actrack.log(self.user1, 'created', changed=self.project)
-        actrack.log(self.user1, 'created', changed=self.task1,
+        actrack.log(self.user1, 'created', targets=self.project)
+        actrack.log(self.user1, 'created', targets=self.task1,
                     related=self.project)
 
 
@@ -47,11 +47,11 @@ class ActionManagerTests(ManagerTests):
         self.assertEqual(self.user1.actions.as_actor().count(), 2)
         self.assertEqual(self.project.actions.as_actor().count(), 0)
 
-    def test_as_changed(self):
-        self.assertEqual(self.user0.actions.as_changed().count(), 0)
-        self.assertEqual(self.project.actions.as_changed().count(), 1)
-        self.assertEqual(self.task1.actions.as_changed().count(), 1)
-        self.assertEqual(self.task2.actions.as_changed().count(), 0)
+    def test_as_targets(self):
+        self.assertEqual(self.user0.actions.as_targets().count(), 0)
+        self.assertEqual(self.project.actions.as_targets().count(), 1)
+        self.assertEqual(self.task1.actions.as_targets().count(), 1)
+        self.assertEqual(self.task2.actions.as_targets().count(), 0)
 
     def test_as_related(self):
         self.assertEqual(self.user1.actions.as_related().count(), 0)

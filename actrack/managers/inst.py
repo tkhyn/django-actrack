@@ -50,7 +50,7 @@ class InstActionManager(InstActrackManager):
 
     def get_queryset(self):
         """
-        All the actions where the instance is the actor, or is in the changed
+        All the actions where the instance is the actor, or is in the targets
         or related objects
         """
 
@@ -60,8 +60,8 @@ class InstActionManager(InstActrackManager):
         # actor
         q = Q(actor_ct=ct, actor_pk=self.instance.pk)
 
-        # changed and related
-        for a in ('changed', 'related'):
+        # targets and related
+        for a in ('targets', 'related'):
             q = q | Q(**{
                 'action_%s__gm2m_ct' % a: ct,
                 'action_%s__gm2m_pk' % a: pk
@@ -91,11 +91,11 @@ class InstActionManager(InstActrackManager):
                 'model. Please use the actrack.connect decorator on model '
                 '%(model)s.' % {'model': self.instance_model})
 
-    def as_changed(self, **kwargs):
+    def as_targets(self, **kwargs):
         """
-        All the actions where the instance is in the changed objects
+        All the actions where the instance is in the targets objects
         """
-        rel = self._get_relation('changed')
+        rel = self._get_relation('targets')
         return rel.related_manager_cls(self.instance).filter(**kwargs)
 
     def as_related(self, **kwargs):
@@ -167,12 +167,12 @@ class InstActionManager(InstActrackManager):
                     kws['verb__in'] = verbs
                 q = q | Q(**kws)
 
-        # now we take care of changed and related objects
+        # now we take care of targets and related objects
         for ct, pk_verbs in iteritems(others_by_ct):
             for pk, verbs in iteritems(pk_verbs):
                 subq = Q(
-                    action_changed__gm2m_ct=ct,
-                    action_changed__gm2m_pk=pk
+                    action_targets__gm2m_ct=ct,
+                    action_targets__gm2m_pk=pk
                 ) | Q(
                     action_related__gm2m_ct=ct,
                     action_related__gm2m_pk=pk
