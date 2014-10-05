@@ -1,3 +1,5 @@
+import time
+
 from actrack import log, track
 from actrack.compat import get_user_model
 from actrack.models import Action
@@ -18,6 +20,9 @@ class UnreadTests(TestCase):
 
         log(self.user1, 'created', targets=self.project)
         log(self.user1, 'validated', targets=self.project)
+
+        # wait a little bit before retrieving actions
+        time.sleep(0.01)
 
     def test_is_unread_for(self):
         action = self.user0.actions.feed()[0]
