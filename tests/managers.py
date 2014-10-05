@@ -3,6 +3,7 @@ Testing the correct behaviour of managers and managers functions
 """
 
 import actrack
+from actrack.models import Action
 
 from ._base import TestCase
 from .app.models import Project, Task
@@ -103,3 +104,17 @@ class TrackerManagerTests(ManagerTests):
         self.assertSetEqual(set(self.user2.trackers.tracked()),
                             set([self.project]))
         self.assertEqual(len(self.user1.trackers.tracked()), 0)
+
+
+class ModelTrackingTests(TestCase):
+
+    def setUp(self):
+        self.user = self.user_model.objects.create()
+        self.project = Project.objects.create()
+
+        actrack.track(self.user, Project, verbs='created', actor_only=False)
+        actrack.log(self.user, 'created', targets=self.project)
+
+    def test_project_in_feed(self):
+        self.assertSetEqual(set(self.user.actions.feed()),
+                            set(Action.objects.all()))

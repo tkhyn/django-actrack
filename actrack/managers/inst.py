@@ -19,6 +19,18 @@ from ..gfk import get_content_type
 from ..compat import Manager, get_user_model
 
 
+def mk_kws(name, ct, pk, verbs=None):
+    """
+    Helper function to generate query dictionaries
+    """
+    kws = {'%s_ct' % name: ct}
+    if not pk is None:
+        kws['%s_pk' % name] = pk
+    if verbs:
+        kws['verb__in'] = verbs
+    return kws
+
+
 class InstActrackManager(Manager):
     """
     A manager that retrieves entries concerning one instance only
@@ -62,10 +74,7 @@ class InstActionManager(InstActrackManager):
 
         # targets and related
         for a in GM2M_ATTRS:
-            q = q | Q(**{
-                'action_%s__gm2m_ct' % a: ct,
-                'action_%s__gm2m_pk' % a: pk
-            })
+            q = q | Q(**mk_kws('action_%s__gm2m' % a, ct, pk))
 
         return super(InstActionManager, self).get_queryset().filter(q)
 
@@ -74,10 +83,8 @@ class InstActionManager(InstActrackManager):
         All the actions where instance is the actor
         """
         return self.get_unfiltered_queryset().filter(
-            actor_ct=get_content_type(self.instance),
-            actor_pk=self.instance.pk,
-            **kwargs
-        )
+            **mk_kws('actor', get_content_type(self.instance),
+                     self.instance.pk))
 
     def _get_relation(self, name):
 
@@ -162,21 +169,13 @@ class InstActionManager(InstActrackManager):
         # first we take care of actors
         for ct, pk_verbs in iteritems(actors_by_ct):
             for pk, verbs in iteritems(pk_verbs):
-                kws = dict(actor_ct=ct, actor_pk=pk)
-                if verbs:
-                    kws['verb__in'] = verbs
-                q = q | Q(**kws)
+                q = q | Q(**mk_kws('actor', ct, pk, verbs=verbs))
 
         # now we take care of targets and related objects
         for ct, pk_verbs in iteritems(others_by_ct):
             for pk, verbs in iteritems(pk_verbs):
-                subq = Q(
-                    action_targets__gm2m_ct=ct,
-                    action_targets__gm2m_pk=pk
-                ) | Q(
-                    action_related__gm2m_ct=ct,
-                    action_related__gm2m_pk=pk
-                )
+                subq = Q(**mk_kws('action_targets__gm2m', ct, pk)) | \
+                       Q(**mk_kws('action_related__gm2m', ct, pk))
                 if verbs:
                     subq = subq & Q(verb__in=verbs)
                 q = q | subq

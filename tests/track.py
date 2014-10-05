@@ -36,3 +36,8 @@ class TrackTests(TestCase):
         self.assertEqual(action.actor, self.user)
         self.assertSetEqual(set(action.targets.all()), set([self.project]))
         self.assertEqual(action.verb, 'started tracking')
+
+    def test_track_model(self):
+        actrack.track(self.user, Project, verbs='created')
+        tracker = Tracker.objects.all()[0]
+        self.assertEqual(tracker.tracked, Project)

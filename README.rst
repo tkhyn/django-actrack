@@ -58,10 +58,10 @@ Great. We've generated a few actions, it's now time to retrieve them.
 
 This creates a tracker entry in the database that will be used to retrieve
 every matching action. In that case, anything that concerns ``train``.
-``train`` could have been any other instance of any other model, but
-``user`` must be an instance of the user model as defined per the
-``AUTH_USER_MODEL`` setting in Django 1.6+ (or ``auth.User`` in previous
-Django versions)
+``train`` could have been any other instance of any other model, or even a
+model class itself to follow any instance of that model, but ``user`` must be
+an instance of the user model as defined per the ``AUTH_USER_MODEL`` setting
+in Django 1.6+ (or ``auth.User`` in previous Django versions).
 
 To retrieve every action matching this tracker, ``django-actrack`` provides
 convenient accessors, provided you have connected the model to it beforehand::
@@ -106,8 +106,9 @@ instance.actions.all()
    a combination of the results of the 3 above methods.
 
 instance.actions.feed(\*\*kw)
-   This will work only if instance is a user, and will return all the instances
-   that match all the trackers the user is associated with.
+   The most useful accessor. This will work only if instance is a user, and
+   will return all the instances that match all the trackers the user is
+   associated with.
 
 instance.tracker.tracking(\*\*kw)
    All the trackers that are tracking the instance.
@@ -122,7 +123,8 @@ instance.tracker.owned(\*\*kw)
 
 instance.tracker.tracked(\*models, \*\*kw)
    Works only if instance is a user, returns all the objects (various types)
-   tracked by the user.
+   tracked by the user. Be aware that if there are model class trackers, there
+   can be model classes in the returned set.
 
 instance.tracker.all()
    Overrides the normal ``all`` method. If instance is a user, will return a
@@ -153,7 +155,7 @@ actrack.track
 .............
 
 ``actrack.track`` can be used either to create a tracker or modify an existing
-one.
+one. It can track model instances but also model classes.
 
 log
    If set to ``True``, the function will log an action with the verb

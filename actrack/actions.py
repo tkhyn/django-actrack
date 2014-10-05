@@ -6,7 +6,7 @@ from django.utils.translation import ugettext as _
 from django.db.models import Q
 
 from .models import Action, Tracker, GM2M_ATTRS
-from .gfk import get_content_type
+from .gfk import get_content_type, get_pk
 from .signals import log as log_action
 from .helpers import to_set
 from .settings import GROUPING_DELAY
@@ -108,8 +108,9 @@ def track(user, to_track, log=False, **kwargs):
     # create query to retrieve matching trackers
     q = Q()
     for obj in to_track:
+        pk = get_pk(obj)
         q = q | Q(tracked_ct=get_content_type(obj),
-                  tracked_pk=obj.pk)
+                  tracked_pk=pk)
     q = q & Q(user=user)
 
     # fetch matching trackers
@@ -119,13 +120,13 @@ def track(user, to_track, log=False, **kwargs):
 
     # modify existing matching trackers if needed
     for tracker in trackers:
-        targets = []
+        changed = []
         for k, v in six.iteritems(kwargs):
             if getattr(tracker, k, None) != v:
-                targets.append(k)
+                changed.append(k)
             setattr(tracker, k, v)
 
-        if targets:
+        if changed:
             tracker.save()
 
         tracked_objs.append(tracker.tracked)

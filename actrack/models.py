@@ -13,6 +13,7 @@ from jsonfield import JSONField
 from .managers.default import DefaultActionManager
 from .settings import AUTH_USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES
 from .fields import VerbsField
+from .gfk import ModelGFK
 from .compat import now, load_app
 
 
@@ -206,8 +207,9 @@ class Tracker(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='trackers+')
 
     tracked_ct = models.ForeignKey(ContentType)
-    tracked_pk = models.CharField(max_length=255)
-    tracked = generic.GenericForeignKey('tracked_ct', 'tracked_pk')
+    # tracked_pk supports null value to refer to the model class only
+    tracked_pk = models.CharField(null=True, max_length=255)
+    tracked = ModelGFK('tracked_ct', 'tracked_pk')
 
     verbs = VerbsField(max_length=1000)
 

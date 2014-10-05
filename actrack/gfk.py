@@ -1,8 +1,11 @@
 from collections import defaultdict
+from inspect import isclass
 
-from django.contrib.contenttypes.generic import GenericRelation
+from django.contrib.contenttypes.generic import GenericForeignKey, \
+                                                GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import DEFAULT_DB_ALIAS
 from django.utils import six
 
@@ -10,6 +13,69 @@ from gm2m.signals import deleting
 
 from . import deletion
 from .compat import related_attr_name, get_model_name
+
+
+class ModelGFK(GenericForeignKey):
+    """
+    A generic foreign key that allows null primary key values to link the
+    model class instead of an instance
+    """
+
+    def get_content_type(self, obj=None, id=None, using=None):
+        if obj is not None:
+            return get_content_type(obj)
+        else:
+            return super(ModelGFK, self).get_content_type(None, id, using)
+
+    def instance_pre_init(self, signal, sender, args, kwargs, **_kwargs):
+        """
+        Handles initializing an object with the generic FK instead of
+        content-type/object-id fields.
+        """
+        if self.name in kwargs:
+            value = kwargs.pop(self.name)
+            kwargs[self.ct_field] = self.get_content_type(obj=value)
+            kwargs[self.fk_field] = get_pk(value)
+
+    def __get__(self, instance, instance_type=None):
+        if instance is None:
+            return self
+
+        try:
+            return getattr(instance, self.cache_attr)
+        except AttributeError:
+            rel_obj = None
+
+            # Make sure to use ContentType.objects.get_for_id() to ensure that
+            # lookups are cached (see ticket #5570). This takes more code than
+            # the naive ``getattr(instance, self.ct_field)``, but has better
+            # performance when dealing with GFKs in loops and such.
+            f = self.model._meta.get_field(self.ct_field)
+            ct_id = getattr(instance, f.get_attname(), None)
+            if ct_id:
+                ct = self.get_content_type(id=ct_id, using=instance._state.db)
+                pk = getattr(instance, self.fk_field)
+                if pk is None:
+                    # pk is None, we should return the model class
+                    rel_obj = ct.model_class()
+                else:
+                    try:
+                        rel_obj = ct.get_object_for_this_type(pk=pk)
+                    except ObjectDoesNotExist:
+                        pass
+            setattr(instance, self.cache_attr, rel_obj)
+            return rel_obj
+
+    def __set__(self, instance, value):
+        ct = None
+        fk = None
+        if value is not None:
+            ct = self.get_content_type(obj=value)
+            fk = get_pk(value)
+
+        setattr(instance, self.ct_field, ct)
+        setattr(instance, self.fk_field, fk)
+        setattr(instance, self.cache_attr, value)
 
 
 class ActrackGenericRelation(GenericRelation):
@@ -105,6 +171,10 @@ def add_relation(src, tgt, field, name=None, related_name=None,
     }
     ActrackGenericRelation(src, **kwargs) \
         .contribute_to_class(tgt, name)
+
+
+def get_pk(obj):
+    return None if isclass(obj) else obj.pk
 
 
 def get_content_type(obj):
