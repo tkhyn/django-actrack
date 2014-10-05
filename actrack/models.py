@@ -32,7 +32,7 @@ class Action(models.Model):
     # using hidden relations so that the related objects' model classes are
     # not cluttered. The reverse relations are available through the
     # RelatedModel's ``actions`` attribute (as a manager) and its methods
-    targets = GM2MField(related_name='actions_as_targets+')
+    targets = GM2MField(related_name='actions_as_target+')
     related = GM2MField(related_name='actions_as_related+')
 
     verb = models.CharField(max_length=255)

@@ -91,7 +91,7 @@ class InstActionManager(InstActrackManager):
                 'model. Please use the actrack.connect decorator on model '
                 '%(model)s.' % {'model': self.instance_model})
 
-    def as_targets(self, **kwargs):
+    def as_target(self, **kwargs):
         """
         All the actions where the instance is in the targets objects
         """
