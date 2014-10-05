@@ -255,8 +255,10 @@ class InstTrackerManager(InstActrackManager):
             verbs = [verbs]
 
         qs = self.owned(**kwargs) \
-                 .filter(ct__in=[get_content_type(m) for m in models]) \
                  .prefetch_related('tracked')
+
+        if models:
+            qs = qs.filter(ct__in=[get_content_type(m) for m in models])
 
         all_tracked = set()
         for t in qs:
