@@ -1,5 +1,5 @@
 django-actrack tests
-=====================
+====================
 
 If you are reading this, you're interested in contributing to django-actrack.
 Great news!
@@ -16,6 +16,9 @@ django-actrack uses nose_ and django_nose_ for testing. All the tests are in the
 which is defined in ``tests/setup.cfg``. This means that any object which is
 not intended to contain tests (e.g. a base classes module) shall contain the
 statement ``__test__ = False``.
+
+The tests use a test application in ``tests.app``, where test models are
+defined.
 
 The ``setup.cfg`` file also contains coverage pre-configuration information,
 but coverage is disabled by default.
