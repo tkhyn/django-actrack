@@ -40,6 +40,9 @@ class Action(models.Model):
     # default manager
     objects = DefaultActionManager()
 
+    class Meta:
+        ordering = ('-timestamp',)
+
     def __init__(self, *args, **kwargs):
         super(Action, self).__init__(*args, **kwargs)
         self._unread_in_cache = {}
