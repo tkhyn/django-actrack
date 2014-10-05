@@ -48,7 +48,7 @@ class ActionManagerTests(ManagerTests):
 
     def test_as_target(self):
         self.assertEqual(self.user0.actions.as_target().count(), 0)
-        self.assertEqual(self.project.actions.as_targets().count(), 1)
+        self.assertEqual(self.project.actions.as_target().count(), 1)
         self.assertEqual(self.task1.actions.as_target().count(), 1)
         self.assertEqual(self.task2.actions.as_target().count(), 0)
 
