@@ -1,0 +1,11 @@
+{% load i18n %}
+<div class="action{% if unread %} unread{% endif %}">
+<a href="{{ action.actor_url }}">{{ action.actor }}</a>
+ {{ action.verb }} {% with l=action.targets.all|length %}{% if l %}{% if l < 3 %}{% for obj in action.targets.all %}
+{% if not forloop.first %}{% if forloop.last %} and {% else %}, {% endif %}{% endif %}{{ obj }}
+{% endfor %}{% else %}{{ action.targets.all|first }} and {{ action.targets.all|length|add:"-1" }} others
+{% endif %}{% endif %}{% endwith %}
+{% with l=action.related.all|length %}{% if l %} in relation to {% if l < 3 %}{% for obj in action.related.all %}
+{% if not forloop.first %}{% if forloop.last %} and {% else %}, {% endif %}{% endif %}{{ obj }}
+{% endfor %}{% else %}{{ action.related.all|first }} and {{ action.related.all|length|add:"-1" }} others
+{% endif %}{% endif %}{% endwith %} {{ action.timestamp|timesince }} {% trans "ago" %}</div>

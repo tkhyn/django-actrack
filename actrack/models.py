@@ -3,6 +3,7 @@ from collections import defaultdict
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.template.loader import render_to_string
 from django.template.base import Context
 from django.utils import six
 
@@ -10,7 +11,7 @@ from gm2m import GM2MField
 from jsonfield import JSONField
 
 from .managers.default import DefaultActionManager
-from .settings import AUTH_USER_MODEL, TRACK_UNREAD, AUTO_READ
+from .settings import AUTH_USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES
 from .fields import VerbsField
 from .compat import now, load_app
 
@@ -47,11 +48,26 @@ class Action(models.Model):
         super(Action, self).__init__(*args, **kwargs)
         self._unread_in_cache = {}
 
+    def get_templates(self):
+        norm_verb = self.verb.replace(' ', '_')
+        return [t % {'verb': norm_verb} for t in TEMPLATES]
+
     def _render(self, user, context, **kwargs):
         """
-        Renders the action
+        Renders the action from a template
         """
-        return str(self)
+        dic = dict(kwargs, action=self)
+        if user:
+            dic['user'] = user
+            if 'unread' not in dic:
+                dic['unread'] = self.is_unread(user)
+
+        data = getattr(self, 'data', None)
+        if data:
+            dic.update(data)
+
+        templates = self.get_templates()
+        return render_to_string(templates, dic, context)
 
     def unread_trackers(self, user):
         """
@@ -102,7 +118,7 @@ class Action(models.Model):
         Returns a rendered string
         """
 
-        if not user:
+        if not user and context:
             user = context.get('user', None)
         if user and not 'unread' in kwargs:
             kwargs['unread'] = self.mark_read_for(user, commit=commit)

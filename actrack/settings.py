@@ -6,7 +6,11 @@ _DEFAULTS = dict(
     ACTIONS_ATTR='actions',
     TRACKERS_ATTR='trackers',
     TRACK_UNREAD=True,
-    AUTO_READ=True
+    AUTO_READ=True,
+    TEMPLATES=[
+        'actrack/%(verb)s/action.html',
+        'actrack/action.html',
+    ],
 )
 
 __all__ = list(_DEFAULTS.keys())

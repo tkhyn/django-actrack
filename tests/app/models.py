@@ -11,6 +11,9 @@ class Base(models.Model):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        return self.name
+
 
 @actrack.connect
 class Project(Base):
