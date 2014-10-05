@@ -7,6 +7,7 @@ _DEFAULTS = dict(
     TRACKERS_ATTR='trackers',
     TRACK_UNREAD=True,
     AUTO_READ=True,
+    GROUPING_DELAY=0,
     TEMPLATES=[
         'actrack/%(verb)s/action.html',
         'actrack/action.html',

@@ -6,7 +6,6 @@ import django
 from django.utils.unittest import skipIf
 
 import actrack
-from actrack.compat import get_user_model
 from actrack.models import Action, Tracker, DeletedItem
 from actrack.gfk import get_content_type
 
@@ -19,7 +18,7 @@ from .app.models import Project, Task
 class DeletionTests(TestCase):
 
     def setUp(self):
-        User = get_user_model()
+        User = self.user_model
         self.user0 = User.objects.create(username='user0')
 
         self.project = Project.objects.create()

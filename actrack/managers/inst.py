@@ -13,7 +13,7 @@ from django.db import router
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.six import iteritems, string_types
 
-from ..models import Action, Tracker
+from ..models import Action, Tracker, GM2M_ATTRS
 from ..settings import TRACKERS_ATTR
 from ..gfk import get_content_type
 from ..compat import Manager, get_user_model
@@ -61,7 +61,7 @@ class InstActionManager(InstActrackManager):
         q = Q(actor_ct=ct, actor_pk=self.instance.pk)
 
         # targets and related
-        for a in ('targets', 'related'):
+        for a in GM2M_ATTRS:
             q = q | Q(**{
                 'action_%s__gm2m_ct' % a: ct,
                 'action_%s__gm2m_pk' % a: pk

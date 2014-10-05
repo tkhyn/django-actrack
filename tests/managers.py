@@ -3,7 +3,6 @@ Testing the correct behaviour of managers and managers functions
 """
 
 import actrack
-from actrack.compat import get_user_model
 
 from ._base import TestCase
 from .app.models import Project, Task
@@ -12,7 +11,7 @@ from .app.models import Project, Task
 class ManagerTests(TestCase):
 
     def setUp(self):
-        User = get_user_model()
+        User = self.user_model
         self.user0 = User.objects.create(username='user0')
         self.user1 = User.objects.create(username='user1')
         self.user2 = User.objects.create(username='user2')

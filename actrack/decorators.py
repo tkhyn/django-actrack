@@ -1,5 +1,5 @@
 from .gfk import add_relation
-from .models import Action, Tracker
+from .models import Action, Tracker, GM2M_ATTRS
 from .descriptors import ActrackDescriptor
 from .managers.inst import InstActionManager, InstTrackerManager
 from .settings import ACTIONS_ATTR, TRACKERS_ATTR
@@ -52,7 +52,7 @@ def connect(*args, **kwargs):
                 delattr(cls, rel_name)
 
             # adding hidden gm2m relations and modifying on_delete handlers
-            for attr in ('targets', 'related'):
+            for attr in GM2M_ATTRS:
                 descriptor = getattr(Action, attr)
                 descriptor.add_relation(cls)
                 descriptor.field.rel.on_delete_src = on_delete_src

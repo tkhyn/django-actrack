@@ -1,12 +1,15 @@
+from datetime import timedelta
+
 from django.utils.timezone import now
 from django.utils import six
 from django.utils.translation import ugettext as _
 from django.db.models import Q
 
-from .models import Action, Tracker
+from .models import Action, Tracker, GM2M_ATTRS
 from .gfk import get_content_type
 from .signals import log as log_action
 from .helpers import to_set
+from .settings import GROUPING_DELAY
 
 
 def create_action(verb, **kwargs):
@@ -18,6 +21,11 @@ def create_action(verb, **kwargs):
     # account in the action's data
     kwargs.pop('signal', None)
 
+    timestamp = kwargs.pop('timestamp', now())
+
+    can_group = kwargs.pop('can_group', True)
+    grouping_delay = timedelta(seconds=GROUPING_DELAY) if can_group else 0
+
     try:
         # Try and retrieve untranslated verb if applicable
         verb = verb._proxy__args[0]
@@ -25,27 +33,58 @@ def create_action(verb, **kwargs):
         pass
 
     gm2ms = {}
-    for attr in ('targets', 'related'):
-        gm2ms[attr] = kwargs.pop(attr, None)
+    for attr in GM2M_ATTRS:
+        gm2ms[attr] = to_set(kwargs.pop(attr, None))
 
-    # set 'normal' fields
     actor = kwargs.pop('sender')
-    action = Action.objects.create(
+
+    kws = dict(
         actor_ct=get_content_type(actor),
         actor_pk=actor._get_pk_val(),
-        verb=six.text_type(verb),
-        timestamp=kwargs.pop('timestamp', now()),
-        data=kwargs
+        verb=six.text_type(verb)
     )
 
-    # set many-to-many fields
-    for attr in ('targets', 'related'):
+    # try and retrieve recent existing action, as well as difference in
+    # targets and related objects
+    action = None
+    diff = GM2M_ATTRS
+    if grouping_delay:
+        try:
+            from_tstamp = timestamp - grouping_delay
+            for action in Action.objects \
+                               .prefetch_related(*GM2M_ATTRS) \
+                               .filter(timestamp__gte=from_tstamp, **kws):
+
+                diff = [a for a in GM2M_ATTRS
+                        if set(getattr(action, a).all()) != gm2ms[a]]
+                if len(diff) < 2:
+                    # a matching action has been found, break the loop
+                    break
+            else:
+                # no matching action could be found, a new action must be
+                # created as the 2 sets change
+                action = None
+        except Action.DoesNotExist:
+            pass
+
+    if action:
+        # update data
+        action.data = kwargs.update(action.data if action.data else {})
+        action.save()
+    else:
+        # create the action and set 'normal' fields
+        action = Action.objects.create(**dict(
+            timestamp=timestamp,
+            data=kwargs,
+            **kws
+        ))
+
+    # set many-to-many fields. For action creations, diff = GM2M_ATTRS
+    for attr in diff:
         l = gm2ms[attr]
-        if l is None:
-            continue  # nothing to do
-        elif not isinstance(l, (tuple, list, set)):
+        if not isinstance(l, (tuple, list, set)):
             l = [l]  # convert to a sequence
-        setattr(action, attr, l)
+        setattr(action, attr, set(l).union(getattr(action, attr).all()))
 
     return action
 

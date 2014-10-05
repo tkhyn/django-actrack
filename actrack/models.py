@@ -16,6 +16,9 @@ from .fields import VerbsField
 from .compat import now, load_app
 
 
+GM2M_ATTRS = ('targets', 'related')
+
+
 class Action(models.Model):
     """
     Describes an action, initiated by an actor on target objects, and that
