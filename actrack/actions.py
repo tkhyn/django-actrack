@@ -73,11 +73,11 @@ def create_action(verb, **kwargs):
         action.save()
     else:
         # create the action and set 'normal' fields
-        action = Action.objects.create(**dict(
+        action = Action.objects.create(
             timestamp=timestamp,
             data=kwargs,
             **kws
-        ))
+        )
 
     # set many-to-many fields. For action creations, diff = GM2M_ATTRS
     for attr in diff:
