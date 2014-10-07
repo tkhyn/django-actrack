@@ -64,7 +64,7 @@ class Action(models.Model):
         if user:
             dic['user'] = user
             if 'unread' not in dic:
-                dic['unread'] = self.is_unread(user)
+                dic['unread'] = self.is_unread_for(user)
 
         dic.update(getattr(self, 'data', {}))
 
