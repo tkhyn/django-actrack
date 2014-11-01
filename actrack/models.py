@@ -1,18 +1,17 @@
-from collections import defaultdict
+
 
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.template.loader import render_to_string
 from django.template.base import Context
-from django.utils import six
 
 from gm2m import GM2MField
 from jsonfield import JSONField
 
 from .managers.default import DefaultActionManager
 from .settings import AUTH_USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES
-from .fields import VerbsField
+from .fields import OneToOneField, VerbsField
 from .gfk import ModelGFK
 from .compat import now, load_app
 
@@ -71,50 +70,24 @@ class Action(models.Model):
         templates = self.get_templates()
         return render_to_string(templates, dic, context)
 
-    def unread_trackers(self, user):
-        """
-        Cache the set of trackers for which this action is unread for the user
-        """
-        try:
-            return self._unread_in_cache[user.pk]
-        except KeyError:
-            self._unread_in_cache[user.pk] = l = \
-                set(self.unread_in.filter(user=user))
-            return l
-
-    def reset_unread_in_cache(self, user=None):
-        if user:
-            if not hasattr(self, '_unread_in_qs'):
-                self._unread_in_cache = {}
-            self._unread_in_cache[user.id] = \
-                list(self.unread_in.filter(user=user))
-        else:
-            self._unread_in_cache = {}
-
     def is_unread_for(self, user):
         """
         Returns True if the action is unread for that user
         """
-        if self.unread_trackers(user):
+        if self in user.unread_actions.all():
             return True
         return False
 
-    def mark_read_for(self, user, force=False, commit=True):
+    def mark_read_for(self, user, force=False):
         """
         Attempts to mark the action as read using the tracker's mark_read
         method. Returns True if the action was unread before
         To mark several actions as read, prefer the classmethod
         bulk_mark_read_for
         """
-        unread = False
-        for tracker in self.unread_trackers(user):
-            unread = True
-            tracker.mark_read((self,), force, commit)
-        # update cached unread set
-        self.reset_unread_in_cache(user)
-        return unread
+        return user.unread_actions.mark_read(self, force=force)
 
-    def render(self, user=None, context=None, commit=True, **kwargs):
+    def render(self, user=None, context=None, **kwargs):
         """
         Renders the action, attempting to mark it as read if user is not None
         Returns a rendered string
@@ -123,7 +96,7 @@ class Action(models.Model):
         if not user and context:
             user = context.get('user', None)
         if user and not 'unread' in kwargs:
-            kwargs['unread'] = self.mark_read_for(user, commit=commit)
+            kwargs['unread'] = self.mark_read_for(user)
         return self._render(user, context, **kwargs)
 
     @classmethod
@@ -138,7 +111,7 @@ class Action(models.Model):
         return unread
 
     @classmethod
-    def bulk_mark_read_for(cls, user, actions, force=False, commit=True):
+    def bulk_mark_read_for(cls, user, actions, force=False):
         """
         Marks an iterable of actions as read for the given user
         It is more efficient than calling the mark_read method on each action,
@@ -148,27 +121,18 @@ class Action(models.Model):
         the call to bulk_mark_read_for, ``l[i]`` is True
         """
 
-        trk_dict = defaultdict(lambda: [])
+        unread_actions = user.unread_actions.all()
+
         unread = []
         for a in actions:
-            urd = False  # unread marker
-            for t in a.unread_trackers(user):
-                trk_dict[t].append(a)
-                urd = True
-            unread.append(urd)
+            unread.append(a in unread_actions)
 
-        for tracker, actions in six.iteritems(trk_dict):
-            tracker.mark_read(actions, force, commit)
-
-        # update cached querysets
-        for a in actions:
-            a.reset_unread_in_cache(user)
+        user.unread_actions.bulk_mark_read(actions, force)
 
         return unread
 
     @classmethod
-    def bulk_render(cls, actions=(), user=None, context=None, commit=True,
-                    **kwargs):
+    def bulk_render(cls, actions=(), user=None, context=None, **kwargs):
         """
         Renders an iterable actions, returning a list of rendered
         strings in the same order as ``actions``
@@ -184,7 +148,7 @@ class Action(models.Model):
 
         unread = kwargs.pop('unread', None)
         if unread is None and user:
-            unread = cls.bulk_mark_read_for(user, actions, commit=commit)
+            unread = cls.bulk_mark_read_for(user, actions)
         else:
             # no need to attempt using count(), if actions is a queryset it
             # needs to be evaluated next anyway
@@ -194,6 +158,28 @@ class Action(models.Model):
         for a, urd in zip(actions, unread):
             rendered.append(a._render(user, context, unread=urd, **kwargs))
         return rendered
+
+
+class UnreadTracker(models.Model):
+
+    user = OneToOneField(AUTH_USER_MODEL,
+                                related_name='unread_actions')
+
+    unread_actions = models.ManyToManyField(Action, related_name='unread_in')
+
+    def all(self):
+        return self.unread_actions.all()
+
+    def mark_unread(self, *actions):
+        self.unread_actions.add(*actions)
+
+    def mark_read(self, action, force=False):
+        if AUTO_READ or force:
+            self.unread_actions.remove(action)
+
+    def bulk_mark_read(self, actions, force=False):
+        if AUTO_READ or force:
+            self.unread_actions.remove(*actions)
 
 
 class Tracker(models.Model):
@@ -217,7 +203,6 @@ class Tracker(models.Model):
 
     # unread Actions tracking
     last_updated = models.DateTimeField(default=now)
-    unread_actions = models.ManyToManyField(Action, related_name='unread_in')
 
     def update_unread(self, qs=None):
         """
@@ -233,27 +218,13 @@ class Tracker(models.Model):
         # get actions that occurred since the last time the tracker
         # was updated, and add them to unread_actions
         last_actions = qs.filter(timestamp__gte=self.last_updated)
-        self.unread_actions.add(*last_actions)
-        for action in last_actions:
-            action.reset_unread_in_cache()
+
+        self.user.unread_actions.mark_unread(*last_actions)
 
         self.last_updated = now()
         self.save()
-        return self.unread_actions.all()
 
-    def mark_read(self, actions, force=False, commit=True):
-        """
-        Marks an iterable of Action objects as read. This removes them from
-        the unread_actions queryset
-
-        If ``force`` is set to True, the actions will be marked as unread no
-        matter the value of self.auto_read.
-        """
-        if force or AUTO_READ:
-            # It's not a problem if some actions are not in unread_actions
-            self.unread_actions.remove(*actions)
-            if commit:
-                self.save()
+        return last_actions
 
 
 class DeletedItem(models.Model):

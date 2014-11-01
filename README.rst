@@ -244,9 +244,8 @@ When a new action is created, it is simply considered ad unread by all users.
 An action's status can be retrieved using the ``Action.is_unread_for`` method,
 which takes a user as sole argument.
 
-To update this status, you may use the
-``Action.mark_read_for(user, force, commit)`` method. ``force`` will override
-the ``AUTO_READ`` setting.
+To update this status, you may use the ``Action.mark_read_for(user, force)``
+method. ``force`` will override the ``AUTO_READ`` setting.
 
 Alternatively, if ``AUTO_READ`` is ``True``, an action can be marked as read
 when it is rendered, using its ``render`` method.

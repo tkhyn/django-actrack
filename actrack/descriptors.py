@@ -1,10 +1,30 @@
 """
-Descriptors to be used as attributes for models. They return the actions or
-trackers which refer to a model instance
+Descriptors to be used as attributes for models.
 """
+
+from django.db.models.fields import related
+
+
+class SingleRelatedObjectDescriptor(related.SingleRelatedObjectDescriptor):
+    """
+    For OneToOneField, taken from django-annoying
+    """
+    def __get__(self, instance, instance_type=None):
+        try:
+            return super(SingleRelatedObjectDescriptor, self) \
+                .__get__(instance, instance_type)
+        except self.related.model.DoesNotExist:
+            # create the object if it does not exist
+            obj = self.related.model(**{self.related.field.name: instance})
+            obj.save()
+            return super(SingleRelatedObjectDescriptor, self) \
+                .__get__(instance, instance_type)
 
 
 class ActrackDescriptor(object):
+    """
+    Return the actions or trackers which refer to a model instance
+    """
 
     def __init__(self, manager_cls):
         self.manager_cls = manager_cls

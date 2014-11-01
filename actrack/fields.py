@@ -1,13 +1,29 @@
 """
-Defines a field to store a set of verbs. It is preferable to use a set of
-verbs than a M2M field in Follow for performance reasons
+Defines an improved OneToOneField and a VerbsField
 """
 
 from django.db import models
 from django.utils import six
 
+from .descriptors import SingleRelatedObjectDescriptor
+
+
+class OneToOneField(models.OneToOneField):
+    """
+    A OneToOneField that creates the related object if it does not exist
+    Taken from django-annoying
+    """
+
+    def contribute_to_related_class(self, cls, related):
+        setattr(cls, related.get_accessor_name(),
+                SingleRelatedObjectDescriptor(related))
+
 
 class VerbsField(six.with_metaclass(models.SubfieldBase, models.TextField)):
+    """
+    Defines a field to store a set of verbs. It is preferable to use a set of
+    verbs than a M2M field in Follow for performance reasons
+    """
 
     def __init__(self, *args, **kwargs):
         self.token = kwargs.pop('token', ';')
