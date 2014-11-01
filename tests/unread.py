@@ -1,10 +1,11 @@
 import time
 
 from actrack import log, track
-from actrack.models import Action
+from actrack.models import Action, Tracker
+from actrack.gfk import get_content_type
 
 from ._base import TestCase
-from .app.models import Project
+from .app.models import Project, Task
 
 
 class UnreadTests(TestCase):
@@ -60,3 +61,44 @@ class UnreadTests(TestCase):
             Action.bulk_is_unread_for(self.user0, self.user0.actions.feed()),
             [False, False]
         )
+
+
+class MultipleUnreadTests(TestCase):
+    """
+    Tests to make sure that actions are not marked as unread multiple times
+    when they are tracked by different trackers
+    """
+
+    def setUp(self):
+        self.user0 = self.user_model.objects.create(username='user0')
+        self.user1 = self.user_model.objects.create(username='user1')
+
+        self.project = Project.objects.create(name='project')
+        self.task = Task.objects.create(parent=self.project, name='task')
+
+        track(self.user1, self.project, actor_only=False)
+        track(self.user1, self.task, actor_only=False)
+
+        log(self.user0, 'created', targets=self.task, related=self.project)
+
+        # wait a little bit before retrieving actions
+        time.sleep(0.01)
+
+    def test_not_unread_twice(self):
+
+        action = Action.objects.all()[0]
+
+        t_proj = Tracker.objects.get(tracked_ct=get_content_type(Project))
+        t_proj.update_unread()
+
+        self.assertTrue(action.is_unread_for(self.user1))
+
+        action.mark_read_for(self.user1)
+
+        # check unread action for second tracker
+        t_task = Tracker.objects.get(tracked_ct=get_content_type(Task))
+        t_task.update_unread()
+
+        # the action should not be marked as unread a second time as it has
+        # already been fetched through the first tracker
+        self.assertFalse(action.is_unread_for(self.user1))

@@ -204,6 +204,17 @@ class Tracker(models.Model):
     # unread Actions tracking
     last_updated = models.DateTimeField(default=now)
 
+    def matches(self, action):
+        """
+        Returns true if an action is to be tracked by the Tracker object
+        """
+        if action.actor == self.tracked:
+            return True
+        if not self.actor_only and (self.tracked in action.targets.all()
+                                    or self.tracked in action.related.all()):
+            return True
+        return False
+
     def update_unread(self, qs=None):
         """
         Retrieves the actions having occurred after the last time the tracker
@@ -213,11 +224,27 @@ class Tracker(models.Model):
         if not TRACK_UNREAD:
             return set()
 
-        qs = Action.objects.tracked_by(self)
+        # fetch other trackers to check if the matching actions have been
+        # read through another tracker
+        trackers = Tracker.objects.exclude(pk=self.pk) \
+                                  .filter(user=self.user,
+                                          last_updated__gt=self.last_updated)
 
         # get actions that occurred since the last time the tracker
-        # was updated, and add them to unread_actions
-        last_actions = qs.filter(timestamp__gte=self.last_updated)
+        # was updated
+        last_actions = set(Action.objects.tracked_by(self) \
+                                 .filter(timestamp__gte=self.last_updated))
+
+        fetched_elsewhere = set()
+        for action in last_actions:
+            for t in trackers:
+                if action.timestamp < t.last_updated and t.matches(action):
+                    # the action has already been fetched by t, so it is not
+                    # necessary to mark it as unread
+                    fetched_elsewhere.add(action)
+                    break
+
+        last_actions.difference_update(fetched_elsewhere)
 
         self.user.unread_actions.mark_unread(*last_actions)
 
