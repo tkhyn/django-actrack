@@ -12,7 +12,7 @@ from jsonfield import JSONField
 from .managers.default import DefaultActionManager
 from .settings import AUTH_USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES
 from .fields import OneToOneField, VerbsField
-from .gfk import ModelGFK
+from .gfk import ModelGFK, get_content_type
 from .compat import now, load_app
 
 
@@ -161,6 +161,9 @@ class Action(models.Model):
 
 
 class UnreadTracker(models.Model):
+    """
+    A model to keep track of unread actions for each user
+    """
 
     user = OneToOneField(AUTH_USER_MODEL,
                                 related_name='unread_actions')
@@ -182,7 +185,69 @@ class UnreadTracker(models.Model):
             self.unread_actions.remove(*actions)
 
 
-class Tracker(models.Model):
+class TrackerBase(object):
+    """
+    A base class for Tracker and TempTracker
+    """
+
+    def matches(self, action):
+        """
+        Returns true if an action is to be tracked by the Tracker object
+        """
+        if action.actor == self.tracked:
+            return True
+        if not self.actor_only and (self.tracked in action.targets.all()
+                                    or self.tracked in action.related.all()):
+            return True
+        return False
+
+    def update_unread(self, already_fetched=()):
+        """
+        Retrieves the actions having occurred after the last time the tracker
+        was updated and mark them as unread (bulk-add to unread_actions).
+        """
+
+        if not TRACK_UNREAD:
+            return set()
+
+        # fetch other trackers to check if the matching actions have been
+        # read through another tracker
+        trackers = Tracker.objects.exclude(pk=self.pk) \
+                                  .filter(user=self.user,
+                                          last_updated__gt=self.last_updated)
+
+        # get actions that occurred since the last time the tracker
+        # was updated
+        last_actions = set(Action.objects.tracked_by(self) \
+                                 .filter(timestamp__gte=self.last_updated))
+
+        fetched_elsewhere = set(already_fetched)
+        for action in last_actions:
+            for t in trackers:
+                to_mark_as_fetched_in_t = set()
+                if t.matches(action):
+                    if action.timestamp < t.last_updated:
+                        # the action has already been fetched by t, so it is
+                        # not necessary to mark it as unread now
+                        fetched_elsewhere.add(action)
+                    else:
+                        # it's the first time the action is fetched, so we
+                        # mark it as fetched in the tracker t
+                        to_mark_as_fetched_in_t.add(action)
+                # mark actions as fetched in tracker t
+                t.fetched_elsewhere.add(*to_mark_as_fetched_in_t)
+
+        last_actions.difference_update(fetched_elsewhere)
+
+        self.user.unread_actions.mark_unread(*last_actions)
+
+        self.last_updated = now()
+        self.save()
+
+        return last_actions
+
+
+class Tracker(models.Model, TrackerBase):
     """
     Action tracking object, so that a user can track the actions on specific
     objects
@@ -203,55 +268,41 @@ class Tracker(models.Model):
 
     # unread Actions tracking
     last_updated = models.DateTimeField(default=now)
+    fetched_elsewhere = models.ManyToManyField(Action, related_name='fetched+')
 
-    def matches(self, action):
-        """
-        Returns true if an action is to be tracked by the Tracker object
-        """
-        if action.actor == self.tracked:
-            return True
-        if not self.actor_only and (self.tracked in action.targets.all()
-                                    or self.tracked in action.related.all()):
-            return True
-        return False
-
-    def update_unread(self, qs=None):
-        """
-        Retrieves the actions having occurred after the last time the tracker
-        was updated and mark them as unread (bulk-add to unread_actions).
-        """
-
-        if not TRACK_UNREAD:
-            return set()
-
-        # fetch other trackers to check if the matching actions have been
-        # read through another tracker
-        trackers = Tracker.objects.exclude(pk=self.pk) \
-                                  .filter(user=self.user,
-                                          last_updated__gt=self.last_updated)
-
-        # get actions that occurred since the last time the tracker
-        # was updated
-        last_actions = set(Action.objects.tracked_by(self) \
-                                 .filter(timestamp__gte=self.last_updated))
-
-        fetched_elsewhere = set()
-        for action in last_actions:
-            for t in trackers:
-                if action.timestamp < t.last_updated and t.matches(action):
-                    # the action has already been fetched by t, so it is not
-                    # necessary to mark it as unread
-                    fetched_elsewhere.add(action)
-                    break
-
-        last_actions.difference_update(fetched_elsewhere)
-
-        self.user.unread_actions.mark_unread(*last_actions)
-
-        self.last_updated = now()
-        self.save()
-
+    def update_unread(self):
+        last_actions = super(Tracker, self) \
+                       .update_unread(self.fetched_elsewhere.all())
+        self.fetched_elsewhere.clear()
         return last_actions
+
+
+class TempTracker(TrackerBase):
+    """
+    A tracker that is designed to be used 'on the fly' and is not saved in
+    the database
+    Typically used to retrieve all actions regarding an object, without
+    """
+
+    # we need to set a pk attribute as the update_unread needs it
+    # we use 0 as it is not a django model
+    pk = 0
+
+    def __init__(self, user, tracked, verbs=(), actor_only=True,
+                 last_updated=None):
+        self.user = user
+        self.tracked = tracked
+        self.verbs = verbs
+        self.actor_only = actor_only
+        self.last_updated = last_updated or now()
+
+        self.tracked_ct = get_content_type(tracked)
+        self.tracked_ct_id = self.tracked_ct.pk
+        self.tracked_pk = tracked.pk
+
+    def save(self):
+        # mocks django model, do nothing
+        pass
 
 
 class DeletedItem(models.Model):

@@ -1,7 +1,7 @@
 from ._base import TestCase
 
 import actrack
-from actrack.models import Action, Tracker
+from actrack.models import Action, Tracker, TempTracker
 
 from .app.models import Project
 
@@ -41,3 +41,17 @@ class TrackTests(TestCase):
         actrack.track(self.user, Project, verbs='created')
         tracker = Tracker.objects.all()[0]
         self.assertEqual(tracker.tracked, Project)
+
+
+class TempTrackTests(TestCase):
+
+    def setUp(self):
+        self.user = self.user_model.objects.create(username='user')
+        self.project = Project.objects.create()
+        # creates temporary tracker for project
+        self.tracker = TempTracker(self.user, self.project)
+
+    def test_temp_track(self):
+        actrack.log(self.project, 'started')
+        self.assertListEqual(list(Action.objects.tracked_by(self.tracker)),
+                             list(Action.objects.all()))

@@ -1,7 +1,8 @@
 import time
+from datetime import timedelta
 
 from actrack import log, track
-from actrack.models import Action, Tracker
+from actrack.models import Action, Tracker, TempTracker, now
 from actrack.gfk import get_content_type
 
 from ._base import TestCase
@@ -95,9 +96,56 @@ class MultipleUnreadTests(TestCase):
 
         action.mark_read_for(self.user1)
 
-        # check unread action for second tracker
+        # check unread actions for second tracker
         t_task = Tracker.objects.get(tracked_ct=get_content_type(Task))
         t_task.update_unread()
+
+        # the action should not be marked as unread a second time as it has
+        # already been fetched through the first tracker
+        self.assertFalse(action.is_unread_for(self.user1))
+
+    def test_temp_tracker(self):
+        """
+        Same as above but with a temporary tracker
+        """
+
+        action = Action.objects.all()[0]
+
+        t_proj = Tracker.objects.get(tracked_ct=get_content_type(Project))
+        t_proj.update_unread()
+
+        self.assertTrue(action.is_unread_for(self.user1))
+
+        action.mark_read_for(self.user1)
+
+        # check unread actions for an antedated temporary tracker
+        t_task = TempTracker(self.user1, self.task, actor_only=False,
+                             last_updated=now() - timedelta(0, 1))
+        t_task.update_unread()
+
+        # the action should not be marked as unread a second time as it has
+        # already been fetched through the first tracker
+        self.assertFalse(action.is_unread_for(self.user1))
+
+    def test_temp_tracker_reverse(self):
+        """
+        Same as above but ... reversed
+        """
+
+        action = Action.objects.all()[0]
+
+        # check unread actions for an antedated temporary tracker
+        t_task = TempTracker(self.user1, self.task, actor_only=False,
+                             last_updated=now() - timedelta(0, 1))
+        t_task.update_unread()
+
+        self.assertTrue(action.is_unread_for(self.user1))
+
+        action.mark_read_for(self.user1)
+
+        # check unread actions for the database tracker
+        t_proj = Tracker.objects.get(tracked_ct=get_content_type(Project))
+        t_proj.update_unread()
 
         # the action should not be marked as unread a second time as it has
         # already been fetched through the first tracker
