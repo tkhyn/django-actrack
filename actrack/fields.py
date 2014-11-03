@@ -55,10 +55,24 @@ except:
 else:
     add_introspection_rules([
         (
+            (OneToOneField,),  # classe this rule applies to
+            [],  # pos arguments
+            {  # kw arguments
+                "to": ["rel.to", {}],
+                "to_field": ["rel.field_name",
+                             {"default_attr": "rel.to._meta.pk.name"}],
+                "related_name": ["rel.related_name", {"default": None}],
+                "db_index": ["db_index", {"default": True}],
+            },
+        )
+    ], ['^actrack\.fields\.OneToOneField'])
+
+    add_introspection_rules([
+        (
             [VerbsField],  # Class(es) these apply to
             [],  # Positional arguments (not used)
             {  # Keyword argument
                 "token": ["token", {"default": ","}],
             },
         ),
-    ], ["^actstream\.fields\.VerbsField"])
+    ], ['^actrack\.fields\.VerbsField'])
