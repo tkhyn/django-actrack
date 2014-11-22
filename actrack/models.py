@@ -281,7 +281,8 @@ class TempTracker(TrackerBase):
     """
     A tracker that is designed to be used 'on the fly' and is not saved in
     the database
-    Typically used to retrieve all actions regarding an object, without
+    Typically used to retrieve all actions regarding an object, without needing
+    to specifically track this object
     """
 
     # we need to set a pk attribute as the update_unread needs it
