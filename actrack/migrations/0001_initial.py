@@ -26,8 +26,8 @@ class Migration(migrations.Migration):
                 ('verb', models.CharField(max_length=255)),
                 ('data', jsonfield.fields.JSONField(null=True, blank=True)),
                 ('timestamp', models.DateTimeField(default=django.utils.timezone.now)),
-                ('targets', gm2m.fields.GM2MField(related_name=b'actions_as_target+')),
-                ('related', gm2m.fields.GM2MField(related_name=b'actions_as_related+')),
+                ('targets', gm2m.fields.GM2MField(related_name='actions_as_target+')),
+                ('related', gm2m.fields.GM2MField(related_name='actions_as_related+')),
                 ('actor_ct', models.ForeignKey(to='contenttypes.ContentType')),
             ],
             options={
