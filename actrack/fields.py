@@ -30,6 +30,13 @@ class VerbsField(six.with_metaclass(models.SubfieldBase, models.TextField)):
         kwargs['null'] = True
         super(VerbsField, self).__init__(*args, **kwargs)
 
+    def deconstruct(self):
+        name, path, args, kwargs = super(VerbsField, self).deconstruct()
+        del kwargs['null']
+        if self.token != ';':
+            kwargs['token'] = self.token
+        return name, path, args, kwargs
+
     def to_python(self, value):
         if not value:
             return set()
@@ -46,33 +53,3 @@ class VerbsField(six.with_metaclass(models.SubfieldBase, models.TextField)):
     def value_to_string(self, obj):
         value = self._get_val_from_obj(obj)
         return self.get_db_prep_value(value)
-
-
-try:
-    from south.modelsinspector import add_introspection_rules
-except:
-    pass
-else:
-    add_introspection_rules([
-        (
-            (OneToOneField,),  # classe this rule applies to
-            [],  # pos arguments
-            {  # kw arguments
-                "to": ["rel.to", {}],
-                "to_field": ["rel.field_name",
-                             {"default_attr": "rel.to._meta.pk.name"}],
-                "related_name": ["rel.related_name", {"default": None}],
-                "db_index": ["db_index", {"default": True}],
-            },
-        )
-    ], ['^actrack\.fields\.OneToOneField'])
-
-    add_introspection_rules([
-        (
-            [VerbsField],  # Class(es) these apply to
-            [],  # Positional arguments (not used)
-            {  # Keyword argument
-                "token": ["token", {"default": ","}],
-            },
-        ),
-    ], ['^actrack\.fields\.VerbsField'])
