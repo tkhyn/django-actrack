@@ -165,8 +165,7 @@ class UnreadTracker(models.Model):
     A model to keep track of unread actions for each user
     """
 
-    user = OneToOneField(AUTH_USER_MODEL,
-                                related_name='unread_actions')
+    user = OneToOneField(AUTH_USER_MODEL, related_name='unread_actions')
 
     unread_actions = models.ManyToManyField(Action, related_name='unread_in')
 
