@@ -1,26 +1,50 @@
 import inspect
 
 import django
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.options import Options
 from django.utils import six
+
 
 try:
     from django.utils.timezone import now
 except ImportError:
     from datetime.datetime import now
 
+
 try:
-    from django.apps import AppConfig
+    from django.apps import AppConfig, apps
+    def get_user_model():
+        from .settings import USER_MODEL
+        try:
+            return apps.get_model(USER_MODEL)
+        except ValueError:
+            raise ImproperlyConfigured(
+                "actrack's USER_MODEL must be of the form "
+                "'app_label.model_name'")
+        except LookupError:
+            raise ImproperlyConfigured(
+                "actrack's USER_MODEL refers to model '%s' "
+                "that has not been installed" % USER_MODEL)
+
 except ImportError:  # Django < 1.7
     AppConfig = object
-
-
-try:
-    from django.contrib.auth import get_user_model
-except ImportError:
-    from django.contrib.auth.models import User
-    get_user_model = lambda: User
+    from django.db.models import get_model
+    def get_user_model():
+        from .settings import USER_MODEL
+        try:
+            app_label, model_name = USER_MODEL.split('.')
+        except ValueError:
+            raise ImproperlyConfigured(
+                "actrack's USER_MODEL must be of the form "
+                "'app_label.model_name'")
+        user_model = get_model(app_label, model_name)
+        if user_model is None:
+            raise ImproperlyConfigured(
+                "actrack's USER_MODEL refers to model '%s' "
+                "that has not been installed" % USER_MODEL)
+        return user_model
 
 
 related_attr_name = 'related_name'
