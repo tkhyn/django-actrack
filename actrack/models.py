@@ -10,7 +10,7 @@ from gm2m import GM2MField
 from jsonfield import JSONField
 
 from .managers.default import DefaultActionManager
-from .settings import AUTH_USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES
+from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES
 from .fields import OneToOneField, VerbsField
 from .gfk import ModelGFK, get_content_type
 from .compat import now, load_app
@@ -165,7 +165,7 @@ class UnreadTracker(models.Model):
     A model to keep track of unread actions for each user
     """
 
-    user = OneToOneField(AUTH_USER_MODEL, related_name='unread_actions')
+    user = OneToOneField(USER_MODEL, related_name='unread_actions')
 
     unread_actions = models.ManyToManyField(Action, related_name='unread_in')
 
@@ -254,7 +254,7 @@ class Tracker(models.Model, TrackerBase):
 
     # hidden relation (made accessible through the model instance's 'tracker'
     # attribute and its methods)
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='trackers+')
+    user = models.ForeignKey(USER_MODEL, related_name='trackers+')
 
     tracked_ct = models.ForeignKey(ContentType)
     # tracked_pk supports null value to refer to the model class only
