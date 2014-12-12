@@ -60,8 +60,9 @@ This creates a tracker entry in the database that will be used to retrieve
 every matching action. In that case, anything that concerns ``train``.
 ``train`` could have been any other instance of any other model, or even a
 model class itself to follow any instance of that model, but ``user`` must be
-an instance of the user model as defined per the ``AUTH_USER_MODEL`` setting
-in Django 1.6+ (or ``auth.User`` in previous Django versions).
+an instance of the ``USER_MODEL`` specified in the Settings_ (which defaults
+to the ``AUTH_USER_MODEL`` in Django 1.6+ or ``auth.User`` in previous Django
+versions).
 
 To retrieve every action matching this tracker, ``django-actrack`` provides
 convenient accessors, provided you have connected the model to it beforehand::
@@ -275,9 +276,9 @@ Settings
 The settings must be stored in your Django project's ``settings`` module, as
 a dictionary name ``ACTRACK``. This dictionary may contain the following items:
 
-AUTH_USER_MODEL
+USER_MODEL
    The user model that should be used for the owners of the tracker instances.
-   Defaults to Django's ``AUTH_USER_MODEL`` (>=1.6) or ``user.User`` (<1.6)
+   Defaults to Django's ``AUTH_USER_MODEL`` (>=1.6) or ``auth.User`` (<1.6)
 
 ACTIONS_ATTR
    The name of the accessor for actions, that can be changed in case it clashes
