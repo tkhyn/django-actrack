@@ -36,12 +36,12 @@ class InstActrackManager(Manager):
     A manager that retrieves entries concerning one instance only
     """
 
-    def __init__(self, instance):
+    def __init__(self, instance, model):
         super(InstActrackManager, self).__init__()
         self.instance = instance
         self.instance_model = instance.__class__
+        self.model = model
         self._db = router.db_for_read(self.model)
-
         self.is_user = self.instance_model == get_user_model()
 
     def get_unfiltered_queryset(self):
@@ -57,8 +57,7 @@ class InstActionManager(InstActrackManager):
     """
 
     def __init__(self, instance):
-        super(InstActionManager, self).__init__(instance)
-        self.model = Action
+        super(InstActionManager, self).__init__(instance, Action)
 
     def get_queryset(self):
         """
@@ -185,8 +184,7 @@ class InstActionManager(InstActrackManager):
 class InstTrackerManager(InstActrackManager):
 
     def __init__(self, instance):
-        super(InstTrackerManager, self).__init__(instance)
-        self.model = Tracker
+        super(InstTrackerManager, self).__init__(instance, Tracker)
 
     def get_queryset(self):
         """
