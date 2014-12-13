@@ -299,6 +299,10 @@ GROUPING_DELAY
    The time in seconds after which an action cannot be merged with a more
    recent one. When set to 0, grouping is disabled. Defaults to ``0``
 
+PK_MAXLENGTH
+   The maximum length of the primary keys of the objects that will be linked
+   to action (as targets or related). Defaults to ``16``.
+
 TEMPLATES
    A list of paths where to look for action render templates. You can use
    ``%(verb)s``, which will be replaced by a normalized version of the action's

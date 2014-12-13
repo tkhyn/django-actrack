@@ -10,7 +10,8 @@ from gm2m import GM2MField
 from jsonfield import JSONField
 
 from .managers.default import DefaultActionManager
-from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES
+from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES, \
+                      PK_MAXLENGTH
 from .fields import OneToOneField, VerbsField
 from .gfk import ModelGFK, get_content_type
 from .compat import now, load_app
@@ -32,8 +33,10 @@ class Action(models.Model):
     # using hidden relations so that the related objects' model classes are
     # not cluttered. The reverse relations are available through the
     # RelatedModel's ``actions`` attribute (as a manager) and its methods
-    targets = GM2MField(related_name='actions_as_target+')
-    related = GM2MField(related_name='actions_as_related+')
+    targets = GM2MField(pk_maxlength=PK_MAXLENGTH,
+                        related_name='actions_as_target+')
+    related = GM2MField(pk_maxlength=PK_MAXLENGTH,
+                        related_name='actions_as_related+')
 
     verb = models.CharField(max_length=255)
 
