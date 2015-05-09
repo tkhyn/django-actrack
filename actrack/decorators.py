@@ -4,7 +4,6 @@ from .descriptors import ActrackDescriptor
 from .managers.inst import InstActionManager, InstTrackerManager
 from .settings import ACTIONS_ATTR, TRACKERS_ATTR
 from .deletion import CASCADE, DO_NOTHING_SIGNAL
-from .compat import get_model_name
 
 
 def connect(*args, **kwargs):
@@ -40,9 +39,9 @@ def connect(*args, **kwargs):
 
             # adding generic relations
             for field, model in (('actor', Action), ('tracked', Tracker)):
-                model_name = get_model_name(model)
+                model_name = model._meta.model_name
                 rel_name = '%ss_as_%s' % (model_name, field)
-                add_relation('actrack.%s' % model.__name__, cls,
+                add_relation('actrack.%s' % model_name, cls,
                     field=getattr(model, field), name=rel_name,
                     related_name='%ss_with_%%(class)s_as_%s' % (model_name,
                                                                 field),

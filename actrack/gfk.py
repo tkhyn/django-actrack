@@ -12,7 +12,6 @@ from django.utils import six
 from gm2m.signals import deleting
 
 from . import deletion
-from .compat import related_attr_name, get_model_name
 
 
 class ModelGFK(GenericForeignKey):
@@ -154,19 +153,18 @@ def add_relation(src, tgt, field, name=None, related_name=None,
     relative to the specified GenericForeignKey field
     """
 
+    model_name = field.model._meta.model_name
+
     if not name:
-        name = '%s_as_%s' % (get_model_name(field.model), field.name)
+        name = '%s_as_%s' % (model_name, field.name)
 
     if not related_name:
-        related_name = '%s_with_%(class)s_as_%s' % (
-            get_model_name(field.model),
-            field.name
-        )
+        related_name = '%s_with_%(class)s_as_%s' % (model_name, field.name)
 
     kwargs = {
         'content_type_field': '%s_ct' % field.name,
         'object_id_field': '%s_pk' % field.name,
-        related_attr_name: related_name,
+        'related_query_name': related_name,
         'on_delete': on_delete,
     }
     ActrackGenericRelation(src, **kwargs) \

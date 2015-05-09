@@ -1,6 +1,6 @@
 from django import test
 
-from actrack.compat import get_user_model
+from actrack.managers.inst import get_user_model
 
 __test__ = False
 __unittest = True

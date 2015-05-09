@@ -13,8 +13,6 @@ from ._base import TestCase
 from .app.models import Project, Task
 
 
-@skipIf(django.VERSION < (1, 6),
-        'Deleted Items feature is not available for Django < 1.6')
 class DeletionTests(TestCase):
 
     def setUp(self):

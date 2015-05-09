@@ -3,7 +3,6 @@ from actrack.models import Action
 
 from ._base import TestCase
 from .app.models import Project, Task
-from ._compat import xa0space
 
 
 class RenderTests(TestCase):
@@ -20,5 +19,5 @@ class RenderTests(TestCase):
         self.assertEqual(
             Action.objects.all()[0].render().replace('\n', ''),
             u'<div class="action"><a href="">user0</a> created task in '
-            u'relation to project 0%sminutes ago</div>' % xa0space
+            u'relation to project 0\xa0minutes ago</div>'
         )

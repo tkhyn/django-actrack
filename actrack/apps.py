@@ -1,4 +1,4 @@
-from .compat import AppConfig
+from django.apps import AppConfig
 
 from gm2m.signals import deleting
 

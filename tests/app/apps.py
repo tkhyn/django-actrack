@@ -1,5 +1,7 @@
+from django.apps import AppConfig
+
 import actrack
-from actrack.compat import AppConfig, get_user_model
+from actrack.managers.inst import get_user_model
 
 
 class TestAppConfig(AppConfig):

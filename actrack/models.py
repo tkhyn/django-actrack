@@ -1,10 +1,9 @@
-
-
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.template.loader import render_to_string
 from django.template.base import Context
+from django.utils.timezone import now
 
 from gm2m import GM2MField
 from jsonfield import JSONField
@@ -14,7 +13,6 @@ from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES, \
                       PK_MAXLENGTH
 from .fields import OneToOneField, VerbsField
 from .gfk import ModelGFK, get_content_type
-from .compat import now, load_app
 
 
 GM2M_ATTRS = ('targets', 'related')
@@ -319,6 +317,3 @@ class DeletedItem(models.Model):
 
     def __str__(self):
         return self.description
-
-
-load_app()

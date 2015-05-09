@@ -8,15 +8,28 @@ can be accessed via 'actions' or 'trackers' attributes on object instances
 
 from collections import defaultdict
 
-from django.db.models import Q
+from django.db.models import Q, Manager
 from django.db import router
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.six import iteritems, string_types
+from django.apps import apps
 
 from ..models import Action, Tracker, GM2M_ATTRS
-from ..settings import TRACKERS_ATTR
+from ..settings import TRACKERS_ATTR, USER_MODEL
 from ..gfk import get_content_type
-from ..compat import Manager, get_user_model
+
+
+def get_user_model():
+    try:
+        return apps.get_model(USER_MODEL)
+    except ValueError:
+        raise ImproperlyConfigured(
+            "actrack's USER_MODEL must be of the form "
+            "'app_label.model_name'")
+    except LookupError:
+        raise ImproperlyConfigured(
+            "actrack's USER_MODEL refers to model '%s' "
+            "that has not been installed" % USER_MODEL)
 
 
 def mk_kws(name, ct, pk, verbs=None):
