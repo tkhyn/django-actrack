@@ -159,7 +159,8 @@ def add_relation(src, tgt, field, name=None, related_name=None,
         name = '%s_as_%s' % (model_name, field.name)
 
     if not related_name:
-        related_name = '%s_with_%(class)s_as_%s' % (model_name, field.name)
+        related_name = '%s_%ss_in_%%(class)s' % (field.name,
+                                                 tgt._meta.model_name)
 
     kwargs = {
         'content_type_field': '%s_ct' % field.name,

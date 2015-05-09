@@ -43,8 +43,8 @@ def connect(*args, **kwargs):
                 rel_name = '%ss_as_%s' % (model_name, field)
                 add_relation('actrack.%s' % model_name, cls,
                     field=getattr(model, field), name=rel_name,
-                    related_name='%ss_with_%%(class)s_as_%s' % (model_name,
-                                                                field),
+                    related_name='%s_%ss_in_%%(class)s'
+                                 % (field, cls._meta.model_name),
                     on_delete=on_delete_tgt
                 )
                 # we want a hidden relation, so the attribute should not be set
