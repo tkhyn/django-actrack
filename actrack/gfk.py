@@ -1,8 +1,8 @@
 from collections import defaultdict
 from inspect import isclass
 
-from django.contrib.contenttypes.generic import GenericForeignKey, \
-                                                GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey, \
+                                               GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
