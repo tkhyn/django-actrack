@@ -10,11 +10,13 @@ DATABASES = {
     }
 }
 
-INSTALLED_APPS = ('django.contrib.auth',
-                  'django.contrib.contenttypes',
-                  'actrack',
-                  'django_nose',
-                  'tests.app')
+INSTALLED_APPS = (
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'actrack',
+    'django_nose',
+    'tests.app.apps.TestAppConfig',
+)
 
 MIDDLEWARE_CLASSES = ()  # for django 1.7 not to complain!
 
