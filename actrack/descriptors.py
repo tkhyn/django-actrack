@@ -11,11 +11,17 @@ class SingleRelatedObjectDescriptor(related.SingleRelatedObjectDescriptor):
     """
     def __get__(self, instance, instance_type=None):
         try:
+            model = self.related.related_model
+        except:
+            model = self.related.model
+
+        try:
             return super(SingleRelatedObjectDescriptor, self) \
                 .__get__(instance, instance_type)
-        except self.related.model.DoesNotExist:
-            # create the object if it does not exist
-            obj = self.related.model(**{self.related.field.name: instance})
+        except model.DoesNotExist:
+            # actually a RelatedObjectDoesNotExist exception
+            # this creates the object if it does not exist
+            obj = model(**{self.related.field.name: instance})
             obj.save()
             return super(SingleRelatedObjectDescriptor, self) \
                 .__get__(instance, instance_type)
