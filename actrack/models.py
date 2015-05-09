@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.template.loader import render_to_string
-from django.template.base import Context
 from django.utils.timezone import now
 
 from gm2m import GM2MField
@@ -56,20 +55,21 @@ class Action(models.Model):
         norm_verb = self.verb.replace(' ', '_')
         return [t % {'verb': norm_verb} for t in TEMPLATES]
 
-    def _render(self, user, context, **kwargs):
+    def _render(self, context=None, request=None, using=None):
         """
         Renders the action from a template
         """
-        dic = dict(kwargs, action=self)
-        if user:
-            dic['user'] = user
-            if 'unread' not in dic:
-                dic['unread'] = self.is_unread_for(user)
+        context = dict(context or {},
+            action=self,
+            data=getattr(self, 'data', {}),
+        )
 
-        dic.update(getattr(self, 'data', {}))
+        user = context.get('user', None)
+        if user and 'unread' not in context:
+            context['unread'] = self.is_unread_for(context['user'])
 
-        templates = self.get_templates()
-        return render_to_string(templates, dic, context)
+        return render_to_string(self.get_templates(), context=context,
+                                request=request, using=using)
 
     def is_unread_for(self, user):
         """
@@ -88,17 +88,20 @@ class Action(models.Model):
         """
         return user.unread_actions.mark_read(self, force=force)
 
-    def render(self, user=None, context=None, **kwargs):
+    def render(self, user=None, context=None, request=None, using=None):
         """
         Renders the action, attempting to mark it as read if user is not None
         Returns a rendered string
         """
-
-        if not user and context:
+        if not context:
+            context = {}
+        if user:
+            context['user'] = user
+        else:
             user = context.get('user', None)
-        if user and not 'unread' in kwargs:
-            kwargs['unread'] = self.mark_read_for(user)
-        return self._render(user, context, **kwargs)
+        if user and not 'unread' in context:
+            context['unread'] = self.mark_read_for(user)
+        return self._render(context, request, using)
 
     @classmethod
     def bulk_is_unread_for(cls, user, actions):
@@ -133,7 +136,8 @@ class Action(models.Model):
         return unread
 
     @classmethod
-    def bulk_render(cls, actions=(), user=None, context=None, **kwargs):
+    def bulk_render(cls, actions=(), user=None, context=None, request=None,
+                    using=None):
         """
         Renders an iterable actions, returning a list of rendered
         strings in the same order as ``actions``
@@ -141,13 +145,14 @@ class Action(models.Model):
         If ``user`` is provided, the class method will attempt to mark the
         actions as read for the user using Action.mark_read above
         """
-
         if not context:
-            context = Context()
-        elif not user:
+            context = {}
+        if user:
+            context['user'] = user
+        else:
             user = context.get('user', None)
 
-        unread = kwargs.pop('unread', None)
+        unread = context.pop('unread', None)
         if unread is None and user:
             unread = cls.bulk_mark_read_for(user, actions)
         else:
@@ -157,7 +162,8 @@ class Action(models.Model):
 
         rendered = []
         for a, urd in zip(actions, unread):
-            rendered.append(a._render(user, context, unread=urd, **kwargs))
+            rendered.append(a._render(dict(context, unread=urd),
+                                      request, using))
         return rendered
 
 
