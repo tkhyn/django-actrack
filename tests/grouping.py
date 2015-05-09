@@ -36,7 +36,7 @@ class GroupingTests(TestCase):
         self.log_actions()
         self.assertEqual(Action.objects.count(), 2)
         self.assertSetEqual(
-            set(Action.objects.get(action_related=self.project).targets.all()),
+            set(self.project.actions.as_related()[0].targets.all()),
             set([self.task1, self.task2, self.task3])
         )
 
