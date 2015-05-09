@@ -17,7 +17,7 @@ Features
 - Deleted items do not disappear from the activity tracker
 - Unread/read status actions
 - Actions grouping when similar actions occur close to one another
-- Works with Django 1.4 to 1.6 and matching Python versions (2.6 to 3.4)
+- Works with Django 1.7+ and matching Python versions (2.7 to 3.4)
 
 Installation
 ------------
