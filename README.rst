@@ -269,6 +269,7 @@ The context variables provided in the template are the ones provided as
 ``data`` when creating the action, with the addition of ``user`` (the user for
 which the action is rendered) and ``unread``.
 
+.. _setting:
 
 Settings
 --------
@@ -311,6 +312,3 @@ TEMPLATES
 
 
 .. |copyright| unicode:: 0xA9
-
-
-.. _setting: Settings_
