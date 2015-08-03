@@ -99,7 +99,7 @@ class Action(models.Model):
             context['user'] = user
         else:
             user = context.get('user', None)
-        if user and not 'unread' in context:
+        if user and 'unread' not in context:
             context['unread'] = self.mark_read_for(user)
         return self._render(context, request, using)
 
@@ -128,10 +128,14 @@ class Action(models.Model):
         unread_actions = user.unread_actions.all()
 
         unread = []
+        to_mark_read = []
         for a in actions:
-            unread.append(a in unread_actions)
+            is_unread = a in unread_actions
+            unread.append(is_unread)
+            if is_unread:
+                to_mark_read.append(a)
 
-        user.unread_actions.bulk_mark_read(actions, force)
+        user.unread_actions.bulk_mark_read(to_mark_read, force)
 
         return unread
 
@@ -181,14 +185,19 @@ class UnreadTracker(models.Model):
 
     def mark_unread(self, *actions):
         self.unread_actions.add(*actions)
+        return True
 
     def mark_read(self, action, force=False):
         if AUTO_READ or force:
             self.unread_actions.remove(action)
+            return True
+        return False
 
     def bulk_mark_read(self, actions, force=False):
         if AUTO_READ or force:
             self.unread_actions.remove(*actions)
+            return True
+        return False
 
 
 class TrackerBase(object):
