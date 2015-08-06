@@ -1,9 +1,11 @@
 from datetime import timedelta
+import warnings
 
 from django.utils.timezone import now
 from django.utils import six
 from django.utils.translation import ugettext as _
 from django.db.models import Q
+from django.db import router
 
 from .models import Action, Tracker, GM2M_ATTRS
 from .gfk import get_content_type, get_pk
@@ -32,15 +34,17 @@ def create_action(verb, **kwargs):
     except (AttributeError, IndexError):
         pass
 
+    # there must be an actor and it must have a state and a database
+    actor = kwargs.pop('sender')
+    db = actor._state.db
+
     gm2ms = {}
     for attr in GM2M_ATTRS:
         gm2ms[attr] = to_set(kwargs.pop(attr, None))
 
-    actor = kwargs.pop('sender')
-
     kws = dict(
         actor_ct=get_content_type(actor),
-        actor_pk=actor._get_pk_val(),
+        actor_pk=actor.pk,
         verb=six.text_type(verb)
     )
 
@@ -51,9 +55,9 @@ def create_action(verb, **kwargs):
     if grouping_delay:
         try:
             from_tstamp = timestamp - grouping_delay
-            for action in Action.objects \
-                               .prefetch_related(*GM2M_ATTRS) \
-                               .filter(timestamp__gte=from_tstamp, **kws):
+            for action in Action.objects.db_manager(db) \
+                                .prefetch_related(*GM2M_ATTRS) \
+                                .filter(timestamp__gte=from_tstamp, **kws):
 
                 diff = [a for a in GM2M_ATTRS
                         if set(getattr(action, a).all()) != gm2ms[a]]
@@ -73,7 +77,7 @@ def create_action(verb, **kwargs):
         action.save()
     else:
         # create the action and set 'normal' fields
-        action = Action.objects.create(
+        action = Action.objects.db_manager(db).create(
             timestamp=timestamp,
             data=kwargs,
             **kws
@@ -106,15 +110,29 @@ def track(user, to_track, log=False, **kwargs):
     kwargs['verbs'] = to_set(kwargs.get('verbs', None))
 
     # create query to retrieve matching trackers
+    db = kwargs.pop('using', None)
+    db_from_model = False
     q = Q()
     for obj in to_track:
         pk = get_pk(obj)
         q = q | Q(tracked_ct=get_content_type(obj),
                   tracked_pk=pk)
+        if pk:
+            db = obj._state.db
+        elif not db:
+            db = router.db_for_read(obj)
+            db_from_model = True
+
+    if db_from_model:
+        warnings.warn('The database to use for the tracker has been '
+            'automatically set to the default database of the model to track. '
+            'You may want to provide a db alias with the "using" kwarg.',
+            Warning)
+
     q = q & Q(user=user)
 
     # fetch matching trackers
-    trackers = list(Tracker.objects.filter(q)
+    trackers = list(Tracker.objects.db_manager(db).filter(q)
                                    .prefetch_related('tracked'))
     tracked_objs = []
 
@@ -134,14 +152,15 @@ def track(user, to_track, log=False, **kwargs):
     # create trackers to untracked objects
     untracked_objs = to_track.difference(tracked_objs)
     for obj in untracked_objs:
-        trackers.append(Tracker.objects.create(user=user,
+        trackers.append(Tracker.objects.db_manager(db)
+                                       .create(user=user,
                                                tracked=obj,
                                                **kwargs))
     if log and untracked_objs:
         log_action(user, verb=_('started tracking'), targets=untracked_objs)
 
 
-def untrack(user, to_untrack, verbs=None, log=False):
+def untrack(user, to_untrack, verbs=None, log=False, using=None):
     """
     Disables tracking for the objects in to_untrack for the selected verbs
 
@@ -154,13 +173,21 @@ def untrack(user, to_untrack, verbs=None, log=False):
     to_untrack = to_set(to_untrack)
     # create query to retrieve matching tracker
     q = Q()
+    db = using
     for obj in to_untrack:
         q = q | Q(tracked_ct=get_content_type(obj),
                   tracked_pk=obj.pk)
+        if not db and obj.pk:
+            db = obj._state.db
+
+    if db is None:
+        raise ValueError('The database to use could not be auto-detected. '
+                         'Please provide a db alias with the "using" kwarg.')
+
     q = q & Q(user=user)
 
     # retrieves matching trackers
-    trackers = Tracker.objects.filter(q)
+    trackers = Tracker.objects.db_manager(db).filter(q)
     if log:
         trackers = trackers.prefetch_related('tracked')
 
@@ -170,14 +197,14 @@ def untrack(user, to_untrack, verbs=None, log=False):
         # all verbs should be untracked, just mass-delete the tracker objects
         if log:
             # retrieve the untracked objects beforehand
-            untracked_objs.extend(t.tracked for t in trackers.objects.all())
+            untracked_objs.extend(t.tracked for t in trackers)
         trackers.delete()
     else:
         # only some verbs should be untracked
         to_untrack = []
         to_update = []
         for t in trackers:
-            diff = trackers.verbs.difference(verbs)
+            diff = t.verbs.difference(verbs)
             if not diff:
                 to_untrack.append(t)
             else:
@@ -187,10 +214,12 @@ def untrack(user, to_untrack, verbs=None, log=False):
             # delete trackers with no more verbs to follow
             if log:
                 untracked_objs.extend(t.tracked for t in to_untrack)
-            Tracker.objects.filter(id__in=set(to_untrack)).delete()
+            Tracker.objects.db_manager(db).filter(id__in=set(to_untrack)) \
+                                          .delete()
         if to_update:
             # update trackers which still have verbs to follow
-            Tracker.objects.filter(id__in=set(to_untrack)).update(verbs=verbs)
+            Tracker.objects.db_manager(db).filter(id__in=set(to_untrack)) \
+                                          .update(verbs=verbs)
 
     if untracked_objs:  # no need to check for log
         log_action(user, verb=_('stopped tracking'), targets=untracked_objs)

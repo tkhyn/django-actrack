@@ -15,6 +15,11 @@ class DefaultActionManager(Manager):
         ct = tracker.tracked_ct_id
         pk = tracker.tracked_pk
 
+        try:
+            db = tracker._state.db
+        except AttributeError:
+            db = None
+
         q = Q(actor_ct=ct, actor_pk=pk)
         if not tracker.actor_only:
             kws_targets = dict(action_targets__gm2m_ct=ct,
@@ -25,4 +30,4 @@ class DefaultActionManager(Manager):
         if tracker.verbs:
             q = q & Q(verb__in=tracker.verbs)
 
-        return self.filter(q, **kwargs)
+        return self.db_manager(db).filter(q, **kwargs)

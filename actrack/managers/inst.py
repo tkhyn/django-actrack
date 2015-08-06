@@ -37,7 +37,7 @@ def mk_kws(name, ct, pk, verbs=None):
     Helper function to generate query dictionaries
     """
     kws = {'%s_ct' % name: ct}
-    if not pk is None:
+    if pk is not None:
         kws['%s_pk' % name] = pk
     if verbs:
         kws['verb__in'] = verbs
@@ -54,7 +54,10 @@ class InstActrackManager(Manager):
         self.instance = instance
         self.instance_model = instance.__class__
         self.model = model
-        self._db = router.db_for_read(self.model)
+        try:
+            self._db = instance._state.db
+        except AttributeError:
+            self._db = router.db_for_read(self.model)
         self.is_user = self.instance_model == get_user_model()
 
     def get_unfiltered_queryset(self):
