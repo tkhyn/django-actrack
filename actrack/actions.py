@@ -149,6 +149,10 @@ def track(user, to_track, log=False, **kwargs):
 
         tracked_objs.append(tracker.tracked)
 
+    last_updated = kwargs.pop('last_updated', None)
+    if last_updated is not None:
+        kwargs['last_updated'] = last_updated
+
     # create trackers to untracked objects
     untracked_objs = to_track.difference(tracked_objs)
     for obj in untracked_objs:
