@@ -11,15 +11,15 @@ def connect(*args, **kwargs):
     Model decorator to create relationships between the given model class
     and the Action and Tracker models
 
-    @track
+    @connect
     class MyModel
 
-    @track(use_del_items=False)
+    @connect(use_del_items=False)
     class MyOtherModel
 
     or, alternatively, for existing models:
 
-    track(ExistingModel, **options)
+    connect(ExistingModel, **options)
 
     """
 
