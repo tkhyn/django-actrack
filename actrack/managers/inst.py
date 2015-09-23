@@ -58,7 +58,7 @@ class InstActrackManager(Manager):
             self._db = instance._state.db
         except AttributeError:
             self._db = router.db_for_read(self.model)
-        self.is_user = self.instance_model == get_user_model()
+        self.is_user = issubclass(self.instance_model, get_user_model())
 
     def get_unfiltered_queryset(self):
         """
