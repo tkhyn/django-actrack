@@ -3,10 +3,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.template.loader import render_to_string
 from django.utils.timezone import now
+from django.utils import six
 
 from gm2m import GM2MField
 from jsonfield import JSONField
 
+from .handler import ActionHandlerMetaclass
 from .managers.default import DefaultActionManager
 from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES, \
     PK_MAXLENGTH, DEFAULT_LEVEL, READABLE_LEVEL
@@ -17,7 +19,22 @@ from .gfk import ModelGFK, get_content_type
 GM2M_ATTRS = ('targets', 'related')
 
 
-class Action(models.Model):
+class ActionMetaclass(models.base.ModelBase):
+    """
+    Attach a handler to every created action
+    """
+
+    def __call__(self, *args, **kwargs):
+        action = super(ActionMetaclass, self).__call__(*args, **kwargs)
+        try:
+            action.handler = \
+                ActionHandlerMetaclass.handler_classes[action.verb](action)
+        except KeyError:
+            pass
+        return action
+
+
+class Action(six.with_metaclass(ActionMetaclass, models.Model)):
     """
     Describes an action, initiated by an actor on target objects, and that
     may be related to other objects

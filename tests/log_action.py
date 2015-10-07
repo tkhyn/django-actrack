@@ -8,6 +8,7 @@ import actrack
 from actrack.models import Action
 
 from .app.models import Project
+from .app.action_handlers import MyActionHandler
 
 
 class CreationTests(TestCase):
@@ -28,3 +29,8 @@ class CreationTests(TestCase):
         actrack.log(self.user, 'tests', targets=self.project, my_data=0)
         created_action = Action.objects.all()[0]
         self.assertEqual(created_action.data['my_data'], 0)
+
+    def test_handler(self):
+        actrack.log(self.user, 'my_action')
+        my_action = Action.objects.all()[0]
+        self.assertTrue(isinstance(my_action.handler, MyActionHandler))
