@@ -18,6 +18,5 @@ class RenderTests(TestCase):
     def test_render(self):
         self.assertEqual(
             Action.objects.all()[0].render().replace('\n', ''),
-            u'<div class="action"><a href="">user0</a> created task in '
-            u'relation to project 0\xa0minutes ago</div>'
+            u'user0 created task in relation to project, 0\xa0minutes ago'
         )

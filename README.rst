@@ -261,12 +261,12 @@ Rendering
 ---------
 
 Speaking about rendering, any action can be rendered through its ``render``
-method. It looks for templates using paths defined in the ``TEMPLATES``
-setting_.
+method. ``Action.render`` calls the action handler's ``render`` method, that
+can be overridden in subclasses of ``ActionHandler``.
 
-The context variables provided in the template are the ones provided as
-``data`` when creating the action, with the addition of ``user`` (the user for
-which the action is rendered) and ``unread``.
+The ``ActionHandler.get_context`` method generates a useful default context
+dictionary from the attached action data.
+
 
 .. _setting:
 
@@ -302,12 +302,6 @@ GROUPING_DELAY
 PK_MAXLENGTH
    The maximum length of the primary keys of the objects that will be linked
    to action (as targets or related). Defaults to ``16``.
-
-TEMPLATES
-   A list of paths where to look for action render templates. You can use
-   ``%(verb)s``, which will be replaced by a normalized version of the action's
-   ``verb`` attribute. Defaults to
-   ``['actrack/%(verb)s/action.html','actrack/action.html']``.
 
 LEVELS
    A dictionary of logging levels. Defaults to::

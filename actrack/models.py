@@ -1,17 +1,16 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-from django.template.loader import render_to_string
 from django.utils.timezone import now
 from django.utils import six
 
 from gm2m import GM2MField
 from jsonfield import JSONField
 
-from .handler import ActionHandlerMetaclass
+from .handler import ActionHandlerMetaclass, ActionHandler
 from .managers.default import DefaultActionManager
-from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES, \
-    PK_MAXLENGTH, DEFAULT_LEVEL, READABLE_LEVEL
+from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, PK_MAXLENGTH, \
+    DEFAULT_LEVEL, READABLE_LEVEL
 from .fields import OneToOneField, VerbsField
 from .gfk import ModelGFK, get_content_type
 
@@ -30,7 +29,7 @@ class ActionMetaclass(models.base.ModelBase):
             action.handler = \
                 ActionHandlerMetaclass.handler_classes[action.verb](action)
         except KeyError:
-            pass
+            action.handler = ActionHandler(action)
         return action
 
 
@@ -68,25 +67,11 @@ class Action(six.with_metaclass(ActionMetaclass, models.Model)):
         super(Action, self).__init__(*args, **kwargs)
         self._unread_in_cache = {}
 
-    def get_templates(self):
-        norm_verb = self.verb.replace(' ', '_')
-        return [t % {'verb': norm_verb} for t in TEMPLATES]
-
-    def _render(self, context=None, request=None, using=None):
+    def _render(self, context=None):
         """
         Renders the action from a template
         """
-        context = dict(context or {},
-            action=self,
-            data=getattr(self, 'data', {}),
-        )
-
-        user = context.get('user', None)
-        if user and 'unread' not in context:
-            context['unread'] = self.is_unread_for(context['user'])
-
-        return render_to_string(self.get_templates(), context=context,
-                                request=request, using=using)
+        return self.handler.render(context)
 
     def is_unread_for(self, user):
         """
@@ -105,7 +90,7 @@ class Action(six.with_metaclass(ActionMetaclass, models.Model)):
         """
         return user.unread_actions.mark_read(self, force=force)
 
-    def render(self, user=None, context=None, request=None, using=None):
+    def render(self, user=None, context=None):
         """
         Renders the action, attempting to mark it as read if user is not None
         Returns a rendered string
@@ -118,7 +103,7 @@ class Action(six.with_metaclass(ActionMetaclass, models.Model)):
             user = context.get('user', None)
         if user and 'unread' not in context:
             context['unread'] = self.mark_read_for(user)
-        return self._render(context, request, using)
+        return self._render(context)
 
     @classmethod
     def bulk_is_unread_for(cls, user, actions):
@@ -158,8 +143,7 @@ class Action(six.with_metaclass(ActionMetaclass, models.Model)):
         return unread
 
     @classmethod
-    def bulk_render(cls, actions=(), user=None, context=None, request=None,
-                    using=None):
+    def bulk_render(cls, actions=(), user=None, context=None):
         """
         Renders an iterable actions, returning a list of rendered
         strings in the same order as ``actions``
@@ -184,8 +168,7 @@ class Action(six.with_metaclass(ActionMetaclass, models.Model)):
 
         rendered = []
         for a, urd in zip(actions, unread):
-            rendered.append(a._render(dict(context, unread=urd),
-                                      request, using))
+            rendered.append(a._render(dict(context, unread=urd)))
         return rendered
 
 
