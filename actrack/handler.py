@@ -79,6 +79,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
             context or {},
             action=self.action,
             data=getattr(self.action, 'data', {}),
+            handler=self,
         )
 
         user = context.get('user', None)
