@@ -18,22 +18,7 @@ from .gfk import ModelGFK, get_content_type
 GM2M_ATTRS = ('targets', 'related')
 
 
-class ActionMetaclass(models.base.ModelBase):
-    """
-    Attach a handler to every created action
-    """
-
-    def __call__(self, *args, **kwargs):
-        action = super(ActionMetaclass, self).__call__(*args, **kwargs)
-        try:
-            action.handler = \
-                ActionHandlerMetaclass.handler_classes[action.verb](action)
-        except KeyError:
-            action.handler = ActionHandler(action)
-        return action
-
-
-class Action(six.with_metaclass(ActionMetaclass, models.Model)):
+class Action(models.Model):
     """
     Describes an action, initiated by an actor on target objects, and that
     may be related to other objects
@@ -66,6 +51,11 @@ class Action(six.with_metaclass(ActionMetaclass, models.Model)):
     def __init__(self, *args, **kwargs):
         super(Action, self).__init__(*args, **kwargs)
         self._unread_in_cache = {}
+        try:
+            self.handler = \
+                ActionHandlerMetaclass.handler_classes[self.verb](self)
+        except KeyError:
+            self.handler = ActionHandler(self)
 
     def _render(self, context=None):
         """
