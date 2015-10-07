@@ -2,11 +2,14 @@
 'Extends' an action by providing a way to add user-defined methods
 """
 
+from importlib import import_module
+
 from django.utils.translation import ugettext as _
 from django.utils import six
 from django.utils.timesince import timesince
 
 from .helpers import str_enum
+from .settings import DEFAULT_HANDLER
 
 
 class ActionHandlerMetaclass(type):
@@ -19,6 +22,29 @@ class ActionHandlerMetaclass(type):
         if subclass.verb is not None:
             mcs.handler_classes[subclass.verb] = subclass
         return subclass
+
+    @classmethod
+    def default_handler(mcs):
+        try:
+            return mcs._default_handler
+        except AttributeError:
+            module, cls = DEFAULT_HANDLER.rsplit('.', 1)
+            mcs._default_handler = getattr(import_module(module), cls)
+            return mcs._default_handler
+
+    @classmethod
+    def create_handler(mcs, action):
+        try:
+            return mcs.handler_classes[action.verb](action)
+        except KeyError:
+            pass
+
+        try:
+            return mcs._default_handler(action)
+        except AttributeError:
+            module, cls = DEFAULT_HANDLER.rsplit('.', 1)
+            mcs._default_handler = hdlr = getattr(import_module(module), cls)
+            return hdlr(action)
 
 
 class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):

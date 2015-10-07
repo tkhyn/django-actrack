@@ -9,6 +9,8 @@ PK_MAXLENGTH = 16
 ACTIONS_ATTR = 'actions'
 TRACKERS_ATTR = 'trackers'
 
+DEFAULT_HANDLER = 'actrack.ActionHandler'
+
 TRACK_UNREAD = True
 AUTO_READ = True
 GROUPING_DELAY = 0

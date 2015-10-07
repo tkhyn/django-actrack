@@ -325,6 +325,10 @@ TRACKERS_ATTR
    The name of the accessor for trackers, that can be changed in case it clashes
    with one of your models' fields. Defaults to ``'trackers'``
 
+DEFAULT_HANDLER
+   The path to the default action handler class (used when a matching action
+   handler is not found). Defaults to ``'actrack.ActionHandler'``
+
 TRACK_UNREAD
    Should unread actions be tracked? Defaults to ``True``.
 

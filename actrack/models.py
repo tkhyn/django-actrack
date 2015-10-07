@@ -7,7 +7,7 @@ from django.utils import six
 from gm2m import GM2MField
 from jsonfield import JSONField
 
-from .handler import ActionHandlerMetaclass, ActionHandler
+from .handler import ActionHandlerMetaclass
 from .managers.default import DefaultActionManager
 from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, PK_MAXLENGTH, \
     DEFAULT_LEVEL, READABLE_LEVEL
@@ -51,11 +51,7 @@ class Action(models.Model):
     def __init__(self, *args, **kwargs):
         super(Action, self).__init__(*args, **kwargs)
         self._unread_in_cache = {}
-        try:
-            self.handler = \
-                ActionHandlerMetaclass.handler_classes[self.verb](self)
-        except KeyError:
-            self.handler = ActionHandler(self)
+        self.handler = ActionHandlerMetaclass.create_handler(self)
 
     def _render(self, context=None):
         """
