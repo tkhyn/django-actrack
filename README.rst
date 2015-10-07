@@ -195,6 +195,43 @@ use_del_items
    Defaults to ``True``.
 
 
+actrack.ActionHandler
+.....................
+
+For each action you are using in your code, you can create a subclass of ``ActionHandler`` with a corresponding ``verb`` class attribute that will be related to this action. An instance of this handler class will be attached to any ``Action`` object that is created or retrieved, as the ``handler`` attribute::
+
+   from actrack import ActionHandler
+
+   class MyActionHandler(ActionHandler):
+      verb = 'my_action'
+
+      def render(self, context):
+         return 'I did that'
+
+      def do_something(self):
+         for t in self.action.targets.all():
+            do_something_with_this_target(t)
+
+Handlers are used to process the action. The only special methods are:
+
+   render
+      Called when you call ``render`` on an Action instance
+
+   get_text
+      Returns the text associated to the action
+
+   get_timeinfo
+      Returns the time info of the action
+
+   get_context
+      Returns a default rendering context for the action, should you need it
+      for template rendering
+
+See the actrack.handler module for default implementations.
+
+You can of course add any method you wish to the ``ActionHandler`` subclasses.
+
+
 Grouping
 --------
 
