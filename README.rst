@@ -309,5 +309,29 @@ TEMPLATES
    ``verb`` attribute. Defaults to
    ``['actrack/%(verb)s/action.html','actrack/action.html']``.
 
+LEVELS
+   A dictionary of logging levels. Defaults to::
+
+      {
+         'NULL': 0,
+         'DEBUG': 10,
+         'HIDDEN': 20,
+         'INFO': 30,
+         'WARNING': 40,
+         'ERROR': 50,
+      }
+
+.. note::
+
+   The logging levels shall only be positive integers
+
+
+DEFAULT_LEVEL
+   The default level to use for logging. Defaults to ``LEVELS['INFO']``
+
+READABLE_LEVEL
+   Below that logging level (strictly), an action cannot appear as unread and
+   cannot be marked as read. Defaults to ``LEVELS['INFO']``
+
 
 .. |copyright| unicode:: 0xA9
