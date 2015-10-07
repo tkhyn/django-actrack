@@ -323,8 +323,11 @@ LEVELS
 
 .. note::
 
-   The logging levels shall only be positive integers
+   The logging levels should have upper case names and their values must be
+   small positive integers from 0 to 32767
 
+   The defined logging levels can, after initialization, be accessed under the
+   ``actrack.level`` module. E.g. ``actrack.level.INFO``.
 
 DEFAULT_LEVEL
    The default level to use for logging. Defaults to ``LEVELS['INFO']``
