@@ -9,7 +9,7 @@ from jsonfield import JSONField
 
 from .managers.default import DefaultActionManager
 from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES, \
-    PK_MAXLENGTH
+    PK_MAXLENGTH, DEFAULT_LEVEL
 from .fields import OneToOneField, VerbsField
 from .gfk import ModelGFK, get_content_type
 
@@ -36,7 +36,7 @@ class Action(models.Model):
                         related_name='actions_as_related+')
 
     verb = models.CharField(max_length=255)
-
+    level = models.PositiveSmallIntegerField(default=DEFAULT_LEVEL)
     data = JSONField(blank=True, null=True)
 
     timestamp = models.DateTimeField(default=now)
