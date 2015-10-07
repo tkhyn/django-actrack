@@ -9,7 +9,7 @@ from jsonfield import JSONField
 
 from .managers.default import DefaultActionManager
 from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES, \
-                      PK_MAXLENGTH
+    PK_MAXLENGTH
 from .fields import OneToOneField, VerbsField
 from .gfk import ModelGFK, get_content_type
 
