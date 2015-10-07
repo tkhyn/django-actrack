@@ -47,14 +47,14 @@ def handle_deleted_items(sender, **kwargs):
             # extract instance description to generate new deleted item
             try:
                 description = inst.deleted_item_description()
-            except:
+            except AttributeError:
                 description = six.text_type(inst)
                 opts = inst.__class__._meta
                 warnings.warn(
-                    'Description for an instance of model "%s.%s" was generated '
-                    'from implicit conversion to string. You may want to add '
-                    'a "deleted_item_description" method to the model.'
-                    % (opts.app_label, opts.object_name),
+                    'Description for an instance of model "%s.%s" was '
+                    'generated from implicit conversion to string. You may '
+                    'want to add a "deleted_item_description" method to the '
+                    'model.' % (opts.app_label, opts.object_name),
                     DelItemDescriptionWarning)
             del_item = DeletedItem.objects.create(ctype=inst_ct,
                                                   description=description)

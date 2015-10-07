@@ -9,7 +9,7 @@ from jsonfield import JSONField
 
 from .managers.default import DefaultActionManager
 from .settings import USER_MODEL, TRACK_UNREAD, AUTO_READ, TEMPLATES, \
-    PK_MAXLENGTH, DEFAULT_LEVEL
+    PK_MAXLENGTH, DEFAULT_LEVEL, READABLE_LEVEL
 from .fields import OneToOneField, VerbsField
 from .gfk import ModelGFK, get_content_type
 
@@ -111,7 +111,8 @@ class Action(models.Model):
         """
         unread = []
         for a in actions:
-            unread.append(a.is_unread_for(user))
+            if a.level >= READABLE_LEVEL:
+                unread.append(a.is_unread_for(user))
         return unread
 
     @classmethod
@@ -234,7 +235,8 @@ class TrackerBase(object):
         # get actions that occurred since the last time the tracker
         # was updated
         last_actions = set(Action.objects.tracked_by(self) \
-                                 .filter(timestamp__gte=self.last_updated))
+                                 .filter(timestamp__gte=self.last_updated,
+                                         level__gte=READABLE_LEVEL))
 
         fetched_elsewhere = set(already_fetched)
         for action in last_actions:

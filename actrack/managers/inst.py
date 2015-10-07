@@ -15,7 +15,7 @@ from django.utils.six import iteritems, string_types
 from django.apps import apps
 
 from ..models import Action, Tracker, GM2M_ATTRS
-from ..settings import TRACKERS_ATTR, USER_MODEL
+from ..settings import TRACKERS_ATTR, USER_MODEL, READABLE_LEVEL
 from ..gfk import get_content_type
 
 
@@ -194,6 +194,9 @@ class InstActionManager(InstActrackManager):
                 if verbs:
                     subq = subq & Q(verb__in=verbs)
                 q = q | subq
+
+        level__gte = kwargs.pop('level__gte', 0)
+        kwargs['level__gte'] = max(level__gte, READABLE_LEVEL)
         return self.get_unfiltered_queryset().filter(q, **kwargs)
 
 
