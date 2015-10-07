@@ -39,7 +39,7 @@ Let's generate some. We use ``actrack.log``::
 
    actrack.log(user, 'had_lunch')
 
-``user`` could as welle be any instance of any model, it does not have to be a
+``user`` could as well be any instance of any model, it does not have to be a
 user. Could be a train, for example.
 
 You can also provide targets and related objects::
@@ -169,7 +169,6 @@ actor_only
 verbs
    The verbs to track. Exclude any action that does not match the provide
    verbs. Defaults to any verb.
-
 
 
 actrack.untrack
