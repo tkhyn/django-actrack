@@ -71,20 +71,22 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
     def get_timeinfo(self):
         return _('%(time)s ago') % {'time': timesince(self.action.timestamp)}
 
-    def get_context(self, context=None):
+    def get_context(self, **context):
         """
         Generates a default rendering context from existing data
         """
-        context = dict(
-            context or {},
+        context.update(
             action=self.action,
             data=getattr(self.action, 'data', {}),
             handler=self,
         )
 
-        user = context.get('user', None)
-        if user and 'unread' not in context:
-            context['unread'] = self.action.is_unread_for(context['user'])
+        try:
+            context.setdefault('unread',
+                               self.action.is_unread_for(context['user']))
+        except KeyError:
+            # no user in context
+            pass
 
         return context
 
