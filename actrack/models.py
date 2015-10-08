@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.utils.timezone import now
-from django.utils import six
 
 from gm2m import GM2MField
 from jsonfield import JSONField

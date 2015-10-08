@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.utils import six
 
 
 USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
