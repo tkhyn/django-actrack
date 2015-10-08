@@ -5,4 +5,6 @@ from .signals import log
 from .actions import track, untrack
 from .handler import ActionHandler
 
+from . import level
+
 default_app_config = 'actrack.apps.ActrackConfig'
