@@ -45,19 +45,34 @@ def handle_deleted_items(sender, **kwargs):
             del_item = DeletedItem.objects.get(pk=existing_delitem_pk)
         else:
             # extract instance description to generate new deleted item
+
+            opts = inst._meta
+
             try:
                 description = inst.deleted_item_description()
             except AttributeError:
                 description = six.text_type(inst)
-                opts = inst.__class__._meta
                 warnings.warn(
                     'Description for an instance of model "%s.%s" was '
                     'generated from implicit conversion to string. You may '
                     'want to add a "deleted_item_description" method to the '
                     'model.' % (opts.app_label, opts.object_name),
                     DelItemDescriptionWarning)
+
+            try:
+                serialization = inst.deleted_item_serialization()
+            except AttributeError:
+                serialization = {'pk': inst.pk}
+                warnings.warn(
+                    'Serialization for an instance of model "%s.%s" was '
+                    'generated automatically from the primary key. You may '
+                    'want to add a "deleted_item_serialization" method to the '
+                    'model.' % (opts.app_label, opts.object_name),
+                    DelItemDescriptionWarning)
+
             del_item = DeletedItem.objects.create(ctype=inst_ct,
-                                                  description=description)
+                                                  description=description,
+                                                  serialization=serialization)
             inst._delitem_pk = del_item.pk
 
         # update

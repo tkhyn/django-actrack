@@ -36,8 +36,16 @@ class DeletionTests(TestCase):
                     related=self.project)
 
     def test_delete_targets(self):
+        description = self.task1.deleted_item_description()
+        serialization = self.task1.deleted_item_serialization()
+
         self.task1.delete()
         self.assertEqual(DeletedItem.objects.count(), 1)
+
+        deltgt = DeletedItem.objects.first()
+        self.assertEqual(deltgt.description, description)
+        self.assertEqual(deltgt.serialization, serialization)
+
         self.assertEqual(Action.objects.count(), 4)
         ct = get_content_type(DeletedItem)
         self.assertEqual(

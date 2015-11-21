@@ -269,6 +269,12 @@ To retrieve the verbose description, ``django-actrack`` first looks for a
 returned string as the description. If that fails, it will simply evaluate
 the instance as a string using ``str``.
 
+The same thing exists for serialization. By default, the ``serialization``
+field of the deleted item instance is populated with ``{'pk': object.pk}``
+where ``object`` is the object being deleted. The value stored in
+``serialization`` can be customized on a per-instance basis using the
+``deleted_item_serialization`` method.
+
 
 Read / unread actions
 ---------------------

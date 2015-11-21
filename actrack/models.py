@@ -316,6 +316,7 @@ class DeletedItem(models.Model):
 
     ctype = models.ForeignKey(ContentType)
     description = models.CharField(max_length=255)
+    serialization = JSONField()
 
     def __str__(self):
         return self.description

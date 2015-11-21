@@ -40,6 +40,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('description', models.CharField(max_length=255)),
+                ('serialization', jsonfield.fields.JSONField()),
                 ('ctype', models.ForeignKey(to='contenttypes.ContentType')),
             ],
         ),
