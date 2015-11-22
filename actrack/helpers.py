@@ -16,7 +16,7 @@ def to_set(obj):
     if isinstance(obj, set):
         return obj
 
-    if not isinstance(obj, (tuple, list)):
+    if not hasattr(obj, '__iter__'):
         obj = [obj]
 
     return set(obj)
