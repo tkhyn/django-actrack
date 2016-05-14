@@ -30,4 +30,4 @@ class DefaultActionManager(Manager):
         if tracker.verbs:
             q = q & Q(verb__in=tracker.verbs)
 
-        return self.db_manager(db).filter(q, **kwargs)
+        return self.db_manager(db).filter(q, **kwargs).distinct()
