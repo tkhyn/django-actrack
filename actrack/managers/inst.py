@@ -91,7 +91,8 @@ class InstActionManager(InstActrackManager):
         for a in GM2M_ATTRS:
             q = q | Q(**mk_kws('action_%s__gm2m' % a, ct, pk))
 
-        return super(InstActionManager, self).get_queryset().filter(q)
+        return super(InstActionManager, self).get_queryset() \
+                                             .filter(q).distinct()
 
     def as_actor(self, **kwargs):
         """
@@ -218,7 +219,8 @@ class InstTrackerManager(InstActrackManager):
         if self.is_user:
             q = q | Q(user=self.instance)
 
-        return super(InstTrackerManager, self).get_queryset().filter(q)
+        return super(InstTrackerManager, self).get_queryset() \
+                                              .filter(q).distinct()
 
     def tracking(self, **kwargs):
         """
@@ -228,7 +230,7 @@ class InstTrackerManager(InstActrackManager):
             tracked_ct=get_content_type(self.instance),
             tracked_pk=self.instance.pk,
             **kwargs
-        )
+        ).distinct()
 
     def users(self, **kwargs):
         """
@@ -239,7 +241,7 @@ class InstTrackerManager(InstActrackManager):
         return get_user_model().objects.filter(
             pk__in=set(self.tracking().values_list('user_id', flat=True)),
             **kwargs
-        )
+        ).distinct()
 
     def owned(self, **kwargs):
         """
