@@ -60,11 +60,11 @@ class InstActrackManager(Manager):
             self._db = router.db_for_read(self.model)
         self.is_user = issubclass(self.instance_model, get_user_model())
 
-    def get_unfiltered_queryset(self):
+    def get_queryset(self):
         """
         To call when one wants a shortcut to the unfiltered queryset
         """
-        return super(InstActrackManager, self).get_queryset()
+        return super(InstActrackManager, self).get_queryset().distinct()
 
 
 class InstActionManager(InstActrackManager):
@@ -91,14 +91,13 @@ class InstActionManager(InstActrackManager):
         for a in GM2M_ATTRS:
             q = q | Q(**mk_kws('action_%s__gm2m' % a, ct, pk))
 
-        return super(InstActionManager, self).get_queryset() \
-                                             .filter(q).distinct()
+        return super(InstActionManager, self).get_queryset().filter(q)
 
     def as_actor(self, **kwargs):
         """
         All the actions where instance is the actor
         """
-        return self.get_unfiltered_queryset().filter(
+        return super(InstActionManager, self).get_queryset().filter(
             **mk_kws('actor', get_content_type(self.instance),
                      self.instance.pk))
 
@@ -198,7 +197,7 @@ class InstActionManager(InstActrackManager):
 
         level__gte = kwargs.pop('level__gte', 0)
         kwargs['level__gte'] = max(level__gte, READABLE_LEVEL)
-        return self.get_unfiltered_queryset().filter(q, **kwargs)
+        return super(InstActionManager, self).get_queryset().filter(q, **kwargs)
 
 
 class InstTrackerManager(InstActrackManager):
@@ -219,18 +218,17 @@ class InstTrackerManager(InstActrackManager):
         if self.is_user:
             q = q | Q(user=self.instance)
 
-        return super(InstTrackerManager, self).get_queryset() \
-                                              .filter(q).distinct()
+        return super(InstTrackerManager, self).get_queryset().filter(q)
 
     def tracking(self, **kwargs):
         """
         All Tracker objects tracking the instance
         """
-        return self.get_unfiltered_queryset().filter(
+        return super(InstTrackerManager, self).get_queryset().filter(
             tracked_ct=get_content_type(self.instance),
             tracked_pk=self.instance.pk,
             **kwargs
-        ).distinct()
+        )
 
     def users(self, **kwargs):
         """
@@ -241,7 +239,7 @@ class InstTrackerManager(InstActrackManager):
         return get_user_model().objects.filter(
             pk__in=set(self.tracking().values_list('user_id', flat=True)),
             **kwargs
-        ).distinct()
+        )
 
     def owned(self, **kwargs):
         """
@@ -253,8 +251,8 @@ class InstTrackerManager(InstActrackManager):
                 'Cannot retrieve trackers owned by an object which is not a '
                 'user.')
 
-        return self.get_unfiltered_queryset().filter(user=self.instance,
-                                                     **kwargs)
+        return super(InstTrackerManager, self).get_queryset() \
+            .filter(user=self.instance, **kwargs)
 
     def tracked(self, *models, **kwargs):
         """
