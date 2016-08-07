@@ -23,8 +23,12 @@ class SingleRelatedObjectDescriptor(related.SingleRelatedObjectDescriptor):
         except model.DoesNotExist:
             # actually a RelatedObjectDoesNotExist exception
             # this creates the object if it does not exist
-            obj = model(**{self.related.field.name: instance})
-            obj.save()
+            # we use get_or_create to better handle race conditions than save()
+            model.objects.get_or_create(**{self.related.field.name: instance})
+            try:
+                delattr(instance, self.cache_name)
+            except AttributeError:
+                pass
             return super(SingleRelatedObjectDescriptor, self) \
                 .__get__(instance, instance_type)
 
