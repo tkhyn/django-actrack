@@ -3,16 +3,18 @@ Descriptors to be used as attributes for models.
 """
 
 from django.db.models.fields import related
+from django.db.transaction import atomic
 
 
 class SingleRelatedObjectDescriptor(related.SingleRelatedObjectDescriptor):
     """
-    For OneToOneField, taken from django-annoying
+    For OneToOneField, inspiration from django-annoying
     """
+    @atomic
     def __get__(self, instance, instance_type=None):
         try:
             model = self.related.related_model
-        except:
+        except AttributeError:
             model = self.related.model
 
         try:
