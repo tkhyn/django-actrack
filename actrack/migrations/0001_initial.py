@@ -9,6 +9,8 @@ import django.utils.timezone
 from actrack import settings
 import actrack.fields
 
+from actrack.settings import PK_MAXLENGTH
+
 
 class Migration(migrations.Migration):
 
@@ -28,8 +30,8 @@ class Migration(migrations.Migration):
                 ('data', jsonfield.fields.JSONField(null=True, blank=True)),
                 ('timestamp', models.DateTimeField(default=django.utils.timezone.now)),
                 ('actor_ct', models.ForeignKey(to='contenttypes.ContentType')),
-                ('related', gm2m.fields.GM2MField(related_name='actions_as_related+', through_fields=(b'gm2m_src', b'gm2m_tgt', b'gm2m_ct', b'gm2m_pk'), pk_maxlength=16)),
-                ('targets', gm2m.fields.GM2MField(related_name='actions_as_target+', through_fields=(b'gm2m_src', b'gm2m_tgt', b'gm2m_ct', b'gm2m_pk'), pk_maxlength=16)),
+                ('related', gm2m.fields.GM2MField(related_name='actions_as_related+', through_fields=(b'gm2m_src', b'gm2m_tgt', b'gm2m_ct', b'gm2m_pk'), pk_maxlength=PK_MAXLENGTH)),
+                ('targets', gm2m.fields.GM2MField(related_name='actions_as_target+', through_fields=(b'gm2m_src', b'gm2m_tgt', b'gm2m_ct', b'gm2m_pk'), pk_maxlength=PK_MAXLENGTH)),
             ],
             options={
                 'ordering': ('-timestamp',),
