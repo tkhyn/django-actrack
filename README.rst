@@ -164,7 +164,7 @@ log
 
 actor_only
    Will track actions only when the provided tracked object is the actor of
-   an action. Default to ``False``.
+   an action. Default to ``True``.
 
 verbs
    The verbs to track. Exclude any action that does not match the provide
