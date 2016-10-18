@@ -115,8 +115,8 @@ def track(user, to_track, log=False, **kwargs):
     q = Q()
     for obj in to_track:
         pk = get_pk(obj)
-        q = q | Q(tracked_ct=get_content_type(obj),
-                  tracked_pk=pk)
+        q |= Q(tracked_ct=get_content_type(obj),
+               tracked_pk=pk)
         if pk:
             db = obj._state.db
         elif not db:

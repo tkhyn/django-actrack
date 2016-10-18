@@ -3,6 +3,7 @@ Misc helper function
 """
 
 from django.utils.translation import ugettext as _
+from django.utils import six
 
 
 def to_set(obj):
@@ -16,7 +17,7 @@ def to_set(obj):
     if isinstance(obj, set):
         return obj
 
-    if not hasattr(obj, '__iter__'):
+    if not hasattr(obj, '__iter__') or isinstance(obj, six.string_types):
         obj = [obj]
 
     return set(obj)
