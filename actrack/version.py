@@ -1,6 +1,6 @@
 import subprocess
 
-__version_info__ = (0, 2, 0, 'beta', 6)
+__version_info__ = (0, 3, 0, 'alpha', 0)
 
 
 def get_version(version=__version_info__):
@@ -17,7 +17,7 @@ def get_version(version=__version_info__):
         return version_str
 
     if version[3:] == ('alpha', 0):
-        return '%s.dev%s' % (version_str, get_hg_chgset())
+        return '%s.dev-%s' % (version_str, get_hg_chgset())
     else:
         return ''.join((version_str, dev_st[version[3]], str(version[4])))
 
