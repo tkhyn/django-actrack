@@ -55,6 +55,10 @@ def create_action(verb, **kwargs):
     thread_actions_queue.add(**kwargs)
 
 
+def save_queue(sender, **kwargs):
+    thread_actions_queue.save()
+
+
 def track(user, to_track, log=False, **kwargs):
     """
     Enables a user to track objects or change his tracking options for these

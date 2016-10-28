@@ -2,7 +2,7 @@ from django import test
 
 import actrack
 from actrack.managers.inst import get_user_model
-from actrack.signals import save_queued_actions
+from actrack.actions import save_queue
 
 __test__ = False
 __unittest = True
@@ -23,4 +23,4 @@ class TestCase(test.TestCase):
 
     @staticmethod
     def save_queue():
-        save_queued_actions(None)
+        save_queue(None)
