@@ -26,9 +26,10 @@ class ManagerTests(TestCase):
         actrack.track(self.user0, self.user1)
         actrack.track(self.user2, self.project, actor_only=False)
 
-        actrack.log(self.user1, 'created', targets=self.project)
-        actrack.log(self.user1, 'created', targets=self.task1,
-                    related=self.project)
+        self.log(self.user1, 'created', targets=self.project)
+        self.log(self.user1, 'created', targets=self.task1,
+                 related=self.project)
+        self.save_queue()
 
 
 class ActionManagerTests(ManagerTests):
@@ -113,7 +114,7 @@ class ModelTrackingTests(TestCase):
         self.project = Project.objects.create()
 
         actrack.track(self.user, Project, verbs='created', actor_only=False)
-        actrack.log(self.user, 'created', targets=self.project)
+        self.log(self.user, 'created', targets=self.project, commit=True)
 
     def test_project_in_feed(self):
         self.assertSetEqual(set(self.user.actions.feed()),

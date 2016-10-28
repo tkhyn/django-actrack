@@ -2,9 +2,6 @@
 Testing deletion of linked objects
 """
 
-import django
-from django.utils.unittest import skipIf
-
 import actrack
 from actrack.models import Action, Tracker, DeletedItem
 from actrack.gfk import get_content_type
@@ -27,13 +24,14 @@ class DeletionTests(TestCase):
 
         actrack.track(self.user0, self.project, actor_only=False)
 
-        actrack.log(self.user0, 'created', targets=self.project)
-        actrack.log(self.user0, 'created', targets=self.task1,
-                    related=self.project)
-        actrack.log(self.user0, 'created', targets=self.task2,
-                    related=self.project)
-        actrack.log(self.user0, 'created', targets=self.task3,
-                    related=self.project)
+        self.log(self.user0, 'created', targets=self.project)
+        self.log(self.user0, 'created', targets=self.task1,
+                 related=self.project)
+        self.log(self.user0, 'created', targets=self.task2,
+                 related=self.project)
+        self.log(self.user0, 'created', targets=self.task3,
+                 related=self.project)
+        self.save_queue()
 
     def test_delete_targets(self):
         description = self.task1.deleted_item_description()

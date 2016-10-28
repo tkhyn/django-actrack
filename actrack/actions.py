@@ -1,4 +1,3 @@
-from datetime import timedelta
 import warnings
 
 from django.utils.timezone import now
@@ -7,11 +6,12 @@ from django.utils.translation import ugettext as _
 from django.db.models import Q
 from django.db import router
 
-from .models import Action, Tracker, GM2M_ATTRS
+from .models import Tracker, GM2M_ATTRS
+from .handler import ActionHandlerMetaclass
+from .actions_queue import thread_actions_queue
 from .gfk import get_content_type, get_pk
 from .signals import log as log_action
 from .helpers import to_set
-from .settings import GROUPING_DELAY
 
 
 def create_action(verb, **kwargs):
@@ -23,74 +23,36 @@ def create_action(verb, **kwargs):
     # account in the action's data
     kwargs.pop('signal', None)
 
-    timestamp = kwargs.pop('timestamp', now())
+    # the actor is the sender
+    kwargs['actor'] = kwargs.pop('sender')
 
-    can_group = kwargs.pop('can_group', True)
-    grouping_delay = timedelta(seconds=GROUPING_DELAY) if can_group else 0
+    # default timestamp
+    kwargs.setdefault('timestamp', now())
 
     try:
         # Try and retrieve untranslated verb if applicable
         verb = verb._proxy__args[0]
     except (AttributeError, IndexError):
         pass
+    kwargs['verb'] = six.text_type(verb)
 
-    # there must be an actor and it must have a state and a database
-    actor = kwargs.pop('sender')
-    db = actor._state.db
-
-    gm2ms = {}
     for attr in GM2M_ATTRS:
-        gm2ms[attr] = to_set(kwargs.pop(attr, None))
+        kwargs[attr] = to_set(kwargs.pop(attr, None))
 
-    kws = dict(
-        actor_ct=get_content_type(actor),
-        actor_pk=actor.pk,
-        verb=six.text_type(verb)
-    )
+    handler_class = ActionHandlerMetaclass.handler_class(verb)
 
-    # try and retrieve recent existing action, as well as difference in
-    # targets and related objects
-    action = None
-    diff = GM2M_ATTRS
-    if grouping_delay:
-        try:
-            from_tstamp = timestamp - grouping_delay
-            for action in Action.objects.db_manager(db) \
-                                .prefetch_related(*GM2M_ATTRS) \
-                                .filter(timestamp__gte=from_tstamp, **kws):
+    if handler_class.combine(**kwargs) is False:
+        # the action should not be added / saved as it has been combined with
+        # an existing one
+        return
 
-                diff = [a for a in GM2M_ATTRS
-                        if set(getattr(action, a).all()) != gm2ms[a]]
-                if len(diff) < 2:
-                    # a matching action has been found, break the loop
-                    break
-            else:
-                # no matching action could be found, a new action must be
-                # created as the 2 sets change
-                action = None
-        except Action.DoesNotExist:
-            pass
+    if handler_class.group(**kwargs) is False:
+        # the action should not be added / saved as it has been merged with
+        # a predecessor
+        return
 
-    if action:
-        # update data
-        action.data = kwargs.update(action.data if action.data else {})
-        action.save()
-    else:
-        # create the action and set 'normal' fields
-        action = Action.objects.db_manager(db).create(
-            timestamp=timestamp,
-            data=kwargs,
-            **kws
-        )
-
-    # set many-to-many fields. For action creations, diff = GM2M_ATTRS
-    for attr in diff:
-        l = gm2ms[attr]
-        if not isinstance(l, (tuple, list, set)):
-            l = [l]  # convert to a sequence
-        setattr(action, attr, set(l).union(getattr(action, attr).all()))
-
-    return action
+    # create the action and set 'normal' fields
+    thread_actions_queue.add(**kwargs)
 
 
 def track(user, to_track, log=False, **kwargs):

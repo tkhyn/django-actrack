@@ -147,9 +147,11 @@ timestamp
    The timestamp that should be recorded for the action. If not provided, this
    default to now.
 
-can_group
-   If ``False``, prevents this action from being grouped with a previous recent
-   action. See Grouping_ below. Defaults to ``True``.
+grouping_delay
+   If an action with the same verb has occurred within the last
+   ``grouping_delay`` (in seconds), it is merged with the current one. If it
+   is set to ``0``, this prevents the action from being grouped. See Grouping_
+   below. Defaults to ``GROUPING_DELAY``.
 
 
 actrack.track
@@ -198,7 +200,11 @@ use_del_items
 actrack.ActionHandler
 .....................
 
-For each action you are using in your code, you can create a subclass of ``ActionHandler`` with a corresponding ``verb`` class attribute that will be related to this action. An instance of this handler class will be attached to any ``Action`` object that is created or retrieved, as the ``handler`` attribute::
+For each action you are using in your code, you can create a subclass of
+``ActionHandler`` with a corresponding ``verb`` class attribute that will be
+related to this action. An instance of this handler class will be attached to
+any ``Action`` object that is created or retrieved, as the ``handler``
+attribute::
 
    from actrack import ActionHandler
 
@@ -227,9 +233,35 @@ Handlers are used to process the action. The only special methods are:
       Returns a default rendering context for the action, should you need it
       for template rendering
 
+   combine(timestamp, **kwargs) [classmethod]
+      See Combination_ below
+
+   group(timestamp, **kwargs) [classmethod]
+      See Grouping_ below
+
 See the actrack.handler module for default implementations.
 
 You can of course add any method you wish to the ``ActionHandler`` subclasses.
+
+
+Combination
+-----------
+
+Sometimes, actions should be combined. Either because 2 same actions with
+different arguments occurred at the same time, because two actions are
+redundant and should be merged, or for whatever app-dependant reason.
+
+For that purpose, an action handler can provide a ``combine`` class method.
+The method takes the keyword arguments that would be passed to the 'Action'
+constructor, and can make use of ``cls.queue``, a registry of all the
+previously added keyword arguments in this request.
+
+The ``combine`` class method can manipulate the registry (remove or update
+items), and should return ``False`` to prevent the current item from being added
+to it.
+
+When a request finishes, all the ``kwargs`` in the registry are saved into the
+database.
 
 
 Grouping
@@ -243,8 +275,9 @@ recent actions and, if it finds one, it amends it instead of creating a new
 one.
 
 The definition of 'recent' can be changed by the ``GROUPING_DELAY`` setting, in
-seconds. Individually, it is possible to disable or enable action grouping when
-calling ``actrack.log`` using the ``can_group`` argument.
+seconds. Individually, it is also possible to change this delay or disable
+action grouping when calling ``actrack.log`` using the ``grouping_delay``
+argument.
 
 
 Deleted items

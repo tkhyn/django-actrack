@@ -1,4 +1,4 @@
-import actrack
+from actrack import handler
 from actrack.models import Action
 
 from ._base import TestCase
@@ -9,11 +9,11 @@ class GroupingTests(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        actrack.actions.GROUPING_DELAY = 60
+        handler.GROUPING_DELAY = 60
 
     @classmethod
     def tearDownClass(cls):
-        actrack.actions.GROUPING_DELAY = 0
+        handler.GROUPING_DELAY = 0
 
     def setUp(self):
         self.user0 = self.user_model.objects.create(username='user0')
@@ -24,23 +24,24 @@ class GroupingTests(TestCase):
         self.task3 = Task.objects.create(name='task3', parent=self.project)
 
     def log_actions(self, **kw):
-        actrack.log(self.user0, 'created', targets=self.project, **kw)
-        actrack.log(self.user0, 'created', targets=self.task1,
-                    related=self.project, **kw)
-        actrack.log(self.user0, 'created', targets=self.task2,
-                    related=self.project, **kw)
-        actrack.log(self.user0, 'created', targets=self.task3,
-                    related=self.project, **kw)
+        self.log(self.user0, 'created', targets=self.project, **kw)
+        self.log(self.user0, 'created', targets=self.task1,
+                 related=self.project, **kw)
+        self.log(self.user0, 'created', targets=self.task2,
+                 related=self.project, **kw)
+        self.log(self.user0, 'created', targets=self.task3,
+                 related=self.project, **kw)
+        self.save_queue()
 
     def test_groups(self):
         self.log_actions()
         self.assertEqual(Action.objects.count(), 2)
         self.assertSetEqual(
             set(self.project.actions.as_related()[0].targets.all()),
-            set([self.task1, self.task2, self.task3])
+            {self.task1, self.task2, self.task3}
         )
 
     def test_no_groups(self):
-        self.log_actions(can_group=False)
+        self.log_actions(grouping_delay=0)
         # no grouping, we should have 4 logged actions
         self.assertEqual(Action.objects.count(), 4)

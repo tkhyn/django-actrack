@@ -1,4 +1,3 @@
-from actrack import log
 from actrack.models import Action
 
 from ._base import TestCase
@@ -13,7 +12,8 @@ class RenderTests(TestCase):
         self.project = Project.objects.create(name='project')
         self.task = Task.objects.create(parent=self.project, name='task')
 
-        log(self.user0, 'created', targets=self.task, related=self.project)
+        self.log(self.user0, 'created', targets=self.task, related=self.project,
+                 commit=True)
 
     def test_render(self):
         self.assertEqual(

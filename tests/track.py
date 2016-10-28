@@ -30,6 +30,8 @@ class TrackTests(TestCase):
     def test_track_log(self):
         # tracking all verbs on project, logging the tracking event
         actrack.track(self.user, self.project, log=True)
+        self.save_queue()
+
         actions = Action.objects.all()
         self.assertEqual(len(actions), 1)
         action = actions[0]
@@ -52,6 +54,6 @@ class TempTrackTests(TestCase):
         self.tracker = TempTracker(self.user, self.project)
 
     def test_temp_track(self):
-        actrack.log(self.project, 'started')
+        self.log(self.project, 'started', commit=True)
         self.assertListEqual(list(Action.objects.tracked_by(self.tracker)),
                              list(Action.objects.all()))

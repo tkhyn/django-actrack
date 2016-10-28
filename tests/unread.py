@@ -1,7 +1,7 @@
 import time
 from datetime import timedelta
 
-from actrack import log, track
+from actrack import track
 from actrack.models import Action, Tracker, TempTracker, now
 from actrack.gfk import get_content_type
 
@@ -19,8 +19,9 @@ class UnreadTests(TestCase):
 
         track(self.user0, self.user1, actor_only=True)
 
-        log(self.user1, 'created', targets=self.project)
-        log(self.user1, 'validated', targets=self.project)
+        self.log(self.user1, 'created', targets=self.project)
+        self.log(self.user1, 'validated', targets=self.project)
+        self.save_queue()
 
         # wait a little bit before retrieving actions
         time.sleep(0.01)
@@ -80,7 +81,8 @@ class MultipleUnreadTests(TestCase):
         track(self.user1, self.project, actor_only=False)
         track(self.user1, self.task, actor_only=False)
 
-        log(self.user0, 'created', targets=self.task, related=self.project)
+        self.log(self.user0, 'created', targets=self.task, related=self.project,
+                 commit=True)
 
         # wait a little bit before retrieving actions
         time.sleep(0.01)
