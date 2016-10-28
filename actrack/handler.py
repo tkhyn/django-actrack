@@ -4,12 +4,13 @@
 
 from importlib import import_module
 from datetime import timedelta
+from copy import copy
 
 from django.utils.translation import ugettext as _
 from django.utils import six
 from django.utils.timesince import timesince
 
-from .helpers import str_enum, to_set
+from .helpers import str_enum
 from .gfk import get_content_type
 from .settings import DEFAULT_HANDLER, GROUPING_DELAY
 from .actions_queue import thread_actions_queue
@@ -109,35 +110,83 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         }
 
     @classmethod
-    def combine(cls, **kwargs):
+    def combine(cls, kwargs):
         """
-        Take action to combine a new action described by its kwargs with already
-        queued actions (available through ``cls.queue``)
-        :return: ``False`` if the action described by the kwargs should not be
-        added to the queue
+        Determines if the action described by the provided kwargs should be
+        committed to the db, taking into account other queued actions (available
+        through ``cls.queue``)
+        :return: ``True`` if the action described by the kwargs has been
+        combined and should not be saved
         """
-        pass
+
+        combine_with = 'combine_with_' + kwargs['verb']
+
+        def merge(kws1, kws2):
+            """
+            Merge kws2 into kws1 (without overwriting) if they actually match
+            """
+            if kws1['actor'] == kws2['actor'] \
+            and kws1['targets'] == kws2['targets'] \
+            and kws1['related'] == kws2['related']:
+                for k, v in kws2.items():
+                    try:
+                        v1 = kws1[k]
+                        if isinstance(v1, list):
+                            for it in v:
+                                if it not in v1:
+                                    v1.append(it)
+                        elif isinstance(v1, set):
+                            v1.update(v)
+                        elif isinstance(v1, dict):
+                            v.update(v1)
+                            v1.update(v)
+                    except KeyError:
+                        kws1[k] = v
+                return True
+
+        i = len(cls.queue)
+        while i and cls.queue:
+            i -= 1
+            handler_class, kws = cls.queue[i]
+            try:
+                # attempting to combine the action described by kwargs with
+                # existing actions. If the returned value is True, we exit
+                # as the kwargs-action has been merged in the kws action
+                if getattr(cls, 'combine_with_' + kws['verb'])(kws) is True \
+                and merge(kws, kwargs):
+                    return True
+            except (AttributeError, TypeError):
+                pass
+
+            try:
+                if getattr(handler_class, combine_with)(kwargs) is True \
+                and merge(kwargs, kws):
+                    del cls.queue[i]
+            except (AttributeError, TypeError):
+                pass
 
     @classmethod
-    def group(cls, **kwargs):
+    def group(cls, kwargs):
         """
         Determines if an action described by the kwargs should be merged with
         one of its predecessors or not. Can be overridden to customize the
         grouping behavior
-        :param kwargs: contains at least a verb, actor and timestamp
-        :return: ``False`` if the action described by the kwargs should not be
-        added to the queue
+        :return: ``True`` if the action described by the kwargs has been grouped
+        and should not be added to the queue
         """
 
         grouping_delay = timedelta(seconds=kwargs.pop('grouping_delay',
                                                       GROUPING_DELAY))
-
         if not grouping_delay:
             # no grouping, just return nothing to exit and save the new action
             return
 
         # to avoid circular imports
         from .models import Action, GM2M_ATTRS
+
+        kwargs = copy(kwargs)
+
+        from_tstamp = kwargs.pop('timestamp') - grouping_delay
 
         gm2ms = {attr: kwargs.pop(attr, None) for attr in GM2M_ATTRS}
 
@@ -151,8 +200,9 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
         # try and retrieve recent existing action, as well as difference in
         # targets and related objects
-        from_tstamp = kwargs.pop('timestamp') - grouping_delay
-        for kwg in cls.queue[verb]:
+        for hdlr_cls, kwg in cls.queue:
+            if kwg['verb'] != verb or kwg['timestamp'] < from_tstamp:
+                continue
             diff = [a for a in GM2M_ATTRS if kwg.get(a) != gm2ms[a]]
             if len(diff) < 2:
                 # a matching action has been found, sync the diff, update the
@@ -165,7 +215,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
                     pass
                 if kwargs:
                     kwg['data'] = kwargs
-                return False
+                return True
 
         for action in Action.objects.db_manager(actor._state.db) \
                 .prefetch_related(*GM2M_ATTRS) \
@@ -183,7 +233,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
                 if kwargs:
                     action.data = kwargs
                 action.save()
-                return False
+                return True
 
         # no matching action could be found, a new action must be created,
         # None is returned

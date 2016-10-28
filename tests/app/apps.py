@@ -10,5 +10,7 @@ class TestAppConfig(AppConfig):
 
     def ready(self):
 
+        from . import action_handlers
+
         # connects the user model
         actrack.connect(get_user_model())

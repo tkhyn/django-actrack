@@ -1,5 +1,4 @@
 from threading import local
-from collections import defaultdict
 
 from .gfk import get_content_type
 from .helpers import to_set
@@ -11,13 +10,22 @@ class ThreadActionsQueue(local):
     during this request
     """
     def __init__(self):
-        self.registry = defaultdict(list)
+        self.registry = []
 
-    def __getitem__(self, item):
-        return self.registry[item]
+    def __iter__(self):
+        return iter(self.registry)
 
-    def add(self, verb, **kwargs):
-        self.registry[verb].append(kwargs)
+    def __len__(self):
+        return len(self.registry)
+
+    def __getitem__(self, n):
+        return self.registry[n]
+
+    def __delitem__(self, n):
+        del self.registry[n]
+
+    def add(self, handler_class, kwargs):
+        self.registry.append((handler_class, kwargs))
 
     def save(self):
         """
@@ -27,29 +35,29 @@ class ThreadActionsQueue(local):
         # avoids circular imports
         from .models import Action, GM2M_ATTRS
 
-        for v, q in self.registry.items():
-            for kwargs in q:
-                gm2ms = {attr: to_set(kwargs.pop(attr, None))
-                         for attr in GM2M_ATTRS}
+        for hdlr_class, kwargs in self.registry:
+            gm2ms = {attr: to_set(kwargs.pop(attr, None))
+                     for attr in GM2M_ATTRS}
 
-                # there must be an actor and a timestamp
-                actor = kwargs.pop('actor')
-                action = Action.objects.db_manager(actor._state.db).create(
-                    verb=v,
-                    actor_ct=get_content_type(actor),
-                    actor_pk=actor.pk,
-                    timestamp=kwargs.pop('timestamp'),
-                    data=kwargs
-                )
+            # there must be an actor and a timestamp
+            actor = kwargs.pop('actor')
+            # TODO: use bulk_create
+            action = Action.objects.db_manager(actor._state.db).create(
+                verb=kwargs.pop('verb'),
+                actor_ct=get_content_type(actor),
+                actor_pk=actor.pk,
+                timestamp=kwargs.pop('timestamp'),
+                data=kwargs
+            )
 
-                for attr in GM2M_ATTRS:
-                    l = gm2ms[attr]
-                    if not isinstance(l, (tuple, list, set)):
-                        l = [l]  # convert to a sequence
-                    setattr(action, attr,
-                            set(l).union(getattr(action, attr).all()))
+            for attr in GM2M_ATTRS:
+                l = gm2ms[attr]
+                if not isinstance(l, (tuple, list, set)):
+                    l = [l]  # convert to a sequence
+                setattr(action, attr,
+                        set(l).union(getattr(action, attr).all()))
 
-        self.registry.clear()
+        self.registry = []
 
 
 thread_actions_queue = ThreadActionsQueue()

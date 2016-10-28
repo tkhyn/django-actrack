@@ -9,20 +9,11 @@ class MyIncludedActionHandler(ActionHandler):
     verb = 'my_included_action'
 
     @classmethod
-    def combine(cls, actor, timestamp, **kwargs):
+    def combine_with_my_all_inclusive_action(cls, kwargs):
         # if there is any existing 'my_all_inclusive_action' we don't save this
         # one
-        if cls.queue['my_all_inclusive_action']:
-            return False
+        return True
 
 
 class MyAllInclusiveActionHandler(ActionHandler):
     verb = 'my_all_inclusive_action'
-
-    @classmethod
-    def combine(cls, actor, timestamp, **kwargs):
-        """
-        If there are any existing 'my_included_action', they are removed
-        """
-        if cls.queue['my_included_action']:
-            del cls.queue['my_included_action'][:]

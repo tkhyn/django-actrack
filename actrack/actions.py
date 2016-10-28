@@ -41,18 +41,14 @@ def create_action(verb, **kwargs):
 
     handler_class = ActionHandlerMetaclass.handler_class(verb)
 
-    if handler_class.combine(**kwargs) is False:
-        # the action should not be added / saved as it has been combined with
-        # an existing one
-        return
-
-    if handler_class.group(**kwargs) is False:
-        # the action should not be added / saved as it has been merged with
-        # a predecessor
+    if handler_class.combine(kwargs) is True or \
+    handler_class.group(kwargs) is True:
+        # the action should not be added / saved as it has been combined or
+        # merged with an existing one
         return
 
     # create the action and set 'normal' fields
-    thread_actions_queue.add(**kwargs)
+    thread_actions_queue.add(handler_class, kwargs)
 
 
 def save_queue(sender, **kwargs):
