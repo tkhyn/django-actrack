@@ -39,7 +39,7 @@ class ThreadActionsQueue(local):
                     actor_ct=get_content_type(actor),
                     actor_pk=actor.pk,
                     timestamp=kwargs.pop('timestamp'),
-                    data=kwargs or None
+                    data=kwargs
                 )
 
                 for attr in GM2M_ATTRS:

@@ -37,7 +37,7 @@ class Action(models.Model):
 
     verb = models.CharField(max_length=255)
     level = models.PositiveSmallIntegerField(default=DEFAULT_LEVEL)
-    data = JSONField(blank=True, null=True)
+    data = JSONField(default={})
 
     timestamp = models.DateTimeField(default=now)
 
