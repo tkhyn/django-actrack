@@ -3,6 +3,7 @@ Testing deletion of linked objects
 """
 
 import actrack
+from actrack import handler
 from actrack.models import Action, Tracker, DeletedItem
 from actrack.gfk import get_content_type
 
@@ -11,6 +12,14 @@ from .app.models import Project, Task
 
 
 class DeletionTests(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        handler.GROUPING_DELAY = -1
+
+    @classmethod
+    def tearDownClass(cls):
+        handler.GROUPING_DELAY = 0
 
     def setUp(self):
         User = self.user_model

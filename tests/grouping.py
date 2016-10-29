@@ -42,6 +42,6 @@ class GroupingTests(TestCase):
         )
 
     def test_no_groups(self):
-        self.log_actions(grouping_delay=0)
+        self.log_actions(grouping_delay=-1)
         # no grouping, we should have 4 logged actions
         self.assertEqual(Action.objects.count(), 4)
