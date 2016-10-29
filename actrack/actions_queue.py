@@ -47,6 +47,7 @@ class ThreadActionsQueue(local):
                 actor_ct=get_content_type(actor),
                 actor_pk=actor.pk,
                 timestamp=kwargs.pop('timestamp'),
+                level=kwargs.pop('level'),
                 data=kwargs
             )
 

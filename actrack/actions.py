@@ -47,6 +47,8 @@ def create_action(verb, **kwargs):
         # merged with an existing one
         return
 
+    kwargs.setdefault('level', handler_class.level)
+
     # create the action and set 'normal' fields
     thread_actions_queue.add(handler_class, kwargs)
 

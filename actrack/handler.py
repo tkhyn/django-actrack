@@ -12,7 +12,7 @@ from django.utils.timesince import timesince
 
 from .helpers import str_enum
 from .gfk import get_content_type
-from .settings import DEFAULT_HANDLER, GROUPING_DELAY
+from .settings import DEFAULT_HANDLER, GROUPING_DELAY, DEFAULT_LEVEL, LEVELS
 from .actions_queue import thread_actions_queue
 
 
@@ -76,6 +76,7 @@ class ActionHandlerMetaclass(type):
 class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
     verb = None
+    level = DEFAULT_LEVEL
 
     def __init__(self, action):
         self.action = action
@@ -131,6 +132,12 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         if kws1.get('actor') == kws2.get('actor') \
         and kws1.get('targets') == kws2.get('targets'):
             for k, v in kws2.items():
+                if k == 'level':
+                    # level is a special case
+                    l1 = kws1.get(k, DEFAULT_LEVEL)
+                    if v > l1:
+                        kws1[k] = v
+                    continue
                 try:
                     v1 = kws1[k]
                     if isinstance(v1, list):
