@@ -21,10 +21,24 @@ class ActionHandlerMetaclass(type):
     handler_classes = {}
 
     def __new__(mcs, name, bases, attrs):
+        combinators = {}
+
+        for attr, m in attrs.items():
+            try:
+                __, verb = attr.split('combine_with_')
+            except ValueError:
+                continue
+            combinators[verb] = m
+
         subclass = super(ActionHandlerMetaclass, mcs).__new__(mcs, name,
                                                               bases, attrs)
+
         if subclass.verb is not None:
+            subclass._combinators = combinators
             mcs.handler_classes[subclass.verb] = subclass
+        else:
+            subclass._combinators = {}
+
         return subclass
 
     @classmethod
@@ -110,6 +124,29 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         }
 
     @classmethod
+    def _merge(cls, kws1, kws2):
+        """
+        Merge kws2 into kws1 (without overwriting) if they actually match
+        """
+        if kws1.get('actor') == kws2.get('actor') \
+        and kws1.get('targets') == kws2.get('targets'):
+            for k, v in kws2.items():
+                try:
+                    v1 = kws1[k]
+                    if isinstance(v1, list):
+                        for it in v:
+                            if it not in v1:
+                                v1.append(it)
+                    elif isinstance(v1, set):
+                        v1.update(v)
+                    elif isinstance(v1, dict):
+                        v.update(v1)
+                        v1.update(v)
+                except KeyError:
+                    kws1[k] = v
+            return True
+
+    @classmethod
     def combine(cls, kwargs):
         """
         Determines if the action described by the provided kwargs should be
@@ -119,31 +156,6 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         combined and should not be saved
         """
 
-        combine_with = 'combine_with_' + kwargs['verb']
-
-        def merge(kws1, kws2):
-            """
-            Merge kws2 into kws1 (without overwriting) if they actually match
-            """
-            if kws1['actor'] == kws2['actor'] \
-            and kws1['targets'] == kws2['targets'] \
-            and kws1['related'] == kws2['related']:
-                for k, v in kws2.items():
-                    try:
-                        v1 = kws1[k]
-                        if isinstance(v1, list):
-                            for it in v:
-                                if it not in v1:
-                                    v1.append(it)
-                        elif isinstance(v1, set):
-                            v1.update(v)
-                        elif isinstance(v1, dict):
-                            v.update(v1)
-                            v1.update(v)
-                    except KeyError:
-                        kws1[k] = v
-                return True
-
         i = len(cls.queue)
         while i and cls.queue:
             i -= 1
@@ -152,17 +164,19 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
                 # attempting to combine the action described by kwargs with
                 # existing actions. If the returned value is True, we exit
                 # as the kwargs-action has been merged in the kws action
-                if getattr(cls, 'combine_with_' + kws['verb'])(kws) is True \
-                and merge(kws, kwargs):
+
+                if cls._combinators[kws['verb']](cls, kwargs) is True \
+                and ActionHandler._merge(kws, kwargs):
                     return True
-            except (AttributeError, TypeError):
+            except KeyError:
                 pass
 
             try:
-                if getattr(handler_class, combine_with)(kwargs) is True \
-                and merge(kwargs, kws):
+                if handler_class._combinators[kwargs['verb']](
+                handler_class, kws) is True \
+                and ActionHandler._merge(kwargs, kws):
                     del cls.queue[i]
-            except (AttributeError, TypeError):
+            except KeyError:
                 pass
 
     @classmethod
