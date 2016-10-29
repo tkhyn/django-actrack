@@ -53,7 +53,7 @@ def create_action(verb, **kwargs):
     thread_actions_queue.add(handler_class, kwargs)
 
 
-def save_queue(sender, **kwargs):
+def save_queue(sender=None, **kwargs):
     thread_actions_queue.save()
 
 
