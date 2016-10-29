@@ -175,11 +175,13 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         and should not be added to the queue
         """
 
-        grouping_delay = timedelta(seconds=kwargs.pop('grouping_delay',
-                                                      GROUPING_DELAY))
-        if not grouping_delay:
+        grouping = kwargs.pop('grouping_delay', GROUPING_DELAY)
+
+        if grouping == -1:
             # no grouping, just return nothing to exit and save the new action
             return
+        else:
+            grouping_delay = timedelta(seconds=grouping)
 
         # to avoid circular imports
         from .models import Action, GM2M_ATTRS
@@ -201,7 +203,8 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         # try and retrieve recent existing action, as well as difference in
         # targets and related objects
         for hdlr_cls, kwg in cls.queue:
-            if kwg['verb'] != verb or kwg['timestamp'] < from_tstamp:
+            if kwg['verb'] != verb \
+            or grouping and kwg['timestamp'] < from_tstamp:
                 continue
             diff = [a for a in GM2M_ATTRS if kwg.get(a) != gm2ms[a]]
             if len(diff) < 2:
@@ -216,6 +219,10 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
                 if kwargs:
                     kwg['data'] = kwargs
                 return True
+
+        if not grouping:
+            # database grouping is disabled
+            return
 
         for action in Action.objects.db_manager(actor._state.db) \
                 .prefetch_related(*GM2M_ATTRS) \

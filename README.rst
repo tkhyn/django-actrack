@@ -377,7 +377,8 @@ AUTO_READ
 
 GROUPING_DELAY
    The time in seconds after which an action cannot be merged with a more
-   recent one. When set to 0, grouping is disabled. Defaults to ``0``
+   recent one. When set to ``-1``, grouping is disabled. When set to ``0``,
+   grouping occurs only on unsaved actions. Defaults to ``0``
 
 PK_MAXLENGTH
    The maximum length of the primary keys of the objects that will be linked
