@@ -1,3 +1,5 @@
+from threading import local
+
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
@@ -308,6 +310,27 @@ class TempTracker(TrackerBase):
         pass
 
 
+class DelItemsRegistry(local):
+
+    def __init__(self):
+        self.items = []
+
+    def add(self, instance, del_item):
+        self.items.append((instance, del_item))
+
+    def __getitem__(self, instance):
+        for i in self.items:
+            if i[0] == instance:
+                return i[1]
+        raise KeyError()
+
+    def __iter__(self):
+        return iter(self.items)
+
+    def flush(self):
+        self.items = []
+
+
 class DeletedItem(models.Model):
     """
     A model to keep track of objects that have been deleted but that still
@@ -317,6 +340,8 @@ class DeletedItem(models.Model):
     ctype = models.ForeignKey(ContentType)
     description = models.CharField(max_length=255)
     serialization = JSONField()
+
+    registry = DelItemsRegistry()
 
     def __str__(self):
         return self.description

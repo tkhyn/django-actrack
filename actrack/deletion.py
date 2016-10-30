@@ -18,6 +18,7 @@ def handle_deleted_items(sender, **kwargs):
     """
 
     from .models import DeletedItem
+    from .actions_queue import thread_actions_queue
 
     # the objects being deleted
     instances = kwargs.pop('del_objs')
@@ -39,11 +40,10 @@ def handle_deleted_items(sender, **kwargs):
         inst_ct = ContentType.objects.get_for_model(inst.__class__)
         inst_id = inst.pk
 
-        existing_delitem_pk = getattr(inst, '_delitem_pk', 0)
-        if existing_delitem_pk:
+        try:
             # retrieve the existing deleted item
-            del_item = DeletedItem.objects.get(pk=existing_delitem_pk)
-        else:
+            del_item = DeletedItem.registry[inst]
+        except KeyError:
             # extract instance description to generate new deleted item
 
             opts = inst._meta
@@ -70,12 +70,14 @@ def handle_deleted_items(sender, **kwargs):
                     'model.' % (opts.app_label, opts.object_name),
                     DelItemDescriptionWarning)
 
-            del_item = DeletedItem.objects.create(ctype=inst_ct,
-                                                  description=description,
-                                                  serialization=serialization)
-            inst._delitem_pk = del_item.pk
+            del_item = DeletedItem.objects.create(
+                ctype=inst_ct, description=description,
+                serialization=serialization
+            )
 
-        # update
+            DeletedItem.registry.add(inst, del_item)
+
+        # update in database
         if hasattr(sender, 'content_type_field_name'):
             # GFK update (Action's actor or Tracker's tracked)
             ct_field_name = sender.content_type_field_name

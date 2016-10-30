@@ -33,7 +33,7 @@ class ThreadActionsQueue(local):
         """
 
         # avoids circular imports
-        from .models import Action, GM2M_ATTRS
+        from .models import Action, DeletedItem, GM2M_ATTRS
 
         for hdlr_class, kwargs in self.registry:
             gm2ms = {attr: to_set(kwargs.pop(attr, None))
@@ -55,13 +55,24 @@ class ThreadActionsQueue(local):
                 l = gm2ms[attr]
                 if not isinstance(l, (tuple, list, set)):
                     l = [l]  # convert to a sequence
-                setattr(action, attr,
-                        set(l).union(getattr(action, attr).all()))
+                elts = []
+                for elt in set(l).union(getattr(action, attr).all()):
+                    if elt.pk is None:
+                        # this is a deleted item, attempt to retrieve the
+                        # DeletedItem instance from the registry
+                        try:
+                            elt = DeletedItem.registry[elt]
+                        except KeyError:
+                            continue
+                    elts.append(elt)
+                setattr(action, attr, elts)
 
-            self.flush()
+        self.flush()
 
     def flush(self):
+        from .models import DeletedItem
         self.registry = []
+        DeletedItem.registry.flush()
 
 
 thread_actions_queue = ThreadActionsQueue()

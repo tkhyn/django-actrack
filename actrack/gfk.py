@@ -129,6 +129,8 @@ class ActrackGenericRelation(GenericRelation):
             if self.on_delete in deletion.handlers_with_signal:
                 results = deleting.send(sender=self.rel.field,
                                         del_objs=objs, rel_objs=qs)
+            else:
+                results = []
 
             if self.on_delete in (deletion.CASCADE, deletion.CASCADE_SIGNAL) \
             or self.on_delete is deletion.CASCADE_SIGNAL_VETO \
