@@ -58,6 +58,9 @@ class ThreadActionsQueue(local):
                 setattr(action, attr,
                         set(l).union(getattr(action, attr).all()))
 
+            self.flush()
+
+    def flush(self):
         self.registry = []
 
 
