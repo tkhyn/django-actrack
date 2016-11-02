@@ -41,10 +41,9 @@ def create_action(verb, **kwargs):
 
     handler_class = ActionHandlerMetaclass.handler_class(verb)
 
-    if handler_class.combine(kwargs) is True or \
-    handler_class.group(kwargs) is True:
+    if handler_class.combine(kwargs) is True:
         # the action should not be added / saved as it has been combined or
-        # merged with an existing one
+        # with an existing one
         return
 
     kwargs.setdefault('level', handler_class.level)

@@ -36,6 +36,10 @@ class ThreadActionsQueue(local):
         from .models import Action, DeletedItem, GM2M_ATTRS
 
         for hdlr_class, kwargs in self.registry:
+            if hdlr_class.group(kwargs) is True:
+                # the action has been merged with other ones, it won't be saved
+                continue
+
             gm2ms = {attr: to_set(kwargs.pop(attr, None))
                      for attr in GM2M_ATTRS}
 

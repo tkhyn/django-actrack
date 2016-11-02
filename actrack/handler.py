@@ -196,6 +196,12 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         and should not be added to the queue
         """
 
+        kwargs['__current__'] = True
+        queue = []
+        for a in cls.queue:
+            if not a[1].get('__current__', False):
+                queue.append(a)
+
         grouping = kwargs.pop('grouping_delay', GROUPING_DELAY)
 
         if grouping == -1:
@@ -209,7 +215,8 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
         kwargs = copy(kwargs)
 
-        from_tstamp = kwargs.pop('timestamp') - grouping_delay
+        to_tstamp = kwargs.pop('timestamp')
+        from_tstamp = to_tstamp - grouping_delay
 
         gm2ms = {attr: kwargs.pop(attr, None) for attr in GM2M_ATTRS}
 
@@ -223,9 +230,10 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
         # try and retrieve recent existing action, as well as difference in
         # targets and related objects
-        for hdlr_cls, kwg in cls.queue:
+        for hdlr_cls, kwg in queue:
+            tstamp = kwg['timestamp']
             if kwg['verb'] != verb \
-            or grouping and kwg['timestamp'] < from_tstamp:
+            or grouping and (tstamp < from_tstamp or tstamp > to_tstamp):
                 continue
             diff = [a for a in GM2M_ATTRS if kwg.get(a) != gm2ms[a]]
             if len(diff) < 2:
@@ -247,7 +255,8 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
         for action in Action.objects.db_manager(actor._state.db) \
                 .prefetch_related(*GM2M_ATTRS) \
-                .filter(timestamp__gte=from_tstamp, **kws):
+                .filter(timestamp__gte=from_tstamp,
+                        timestamp__lte=to_tstamp, **kws):
 
             diff = [a for a in GM2M_ATTRS
                     if set(getattr(action, a).all()) != gm2ms[a]]
