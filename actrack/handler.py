@@ -12,7 +12,7 @@ from django.utils.timesince import timesince
 
 from .helpers import str_enum
 from .gfk import get_content_type
-from .settings import DEFAULT_HANDLER, GROUPING_DELAY, DEFAULT_LEVEL, LEVELS
+from .settings import DEFAULT_HANDLER, GROUPING_DELAY, DEFAULT_LEVEL
 from .actions_queue import thread_actions_queue
 
 
@@ -30,6 +30,11 @@ class ActionHandlerMetaclass(type):
                 continue
             combinators[verb] = m
 
+        try:
+            group = classmethod(attrs.pop('group'))
+        except KeyError:
+            group = ActionHandler.group
+
         subclass = super(ActionHandlerMetaclass, mcs).__new__(mcs, name,
                                                               bases, attrs)
 
@@ -38,6 +43,8 @@ class ActionHandlerMetaclass(type):
             mcs.handler_classes[subclass.verb] = subclass
         else:
             subclass._combinators = {}
+
+        subclass.group = group
 
         return subclass
 
@@ -129,29 +136,26 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         """
         Merge kws2 into kws1 (without overwriting) if they actually match
         """
-        if kws1.get('actor') == kws2.get('actor') \
-        and kws1.get('targets') == kws2.get('targets'):
-            for k, v in kws2.items():
-                if k == 'level':
-                    # level is a special case
-                    l1 = kws1.get(k, DEFAULT_LEVEL)
-                    if v > l1:
-                        kws1[k] = v
-                    continue
-                try:
-                    v1 = kws1[k]
-                    if isinstance(v1, list):
-                        for it in v:
-                            if it not in v1:
-                                v1.append(it)
-                    elif isinstance(v1, set):
-                        v1.update(v)
-                    elif isinstance(v1, dict):
-                        v.update(v1)
-                        v1.update(v)
-                except KeyError:
+        for k, v in kws2.items():
+            if k == 'level':
+                # level is a special case
+                l1 = kws1.get(k, DEFAULT_LEVEL)
+                if v > l1:
                     kws1[k] = v
-            return True
+                continue
+            try:
+                v1 = kws1[k]
+                if isinstance(v1, list):
+                    for it in v:
+                        if it not in v1:
+                            v1.append(it)
+                elif isinstance(v1, set):
+                    v1.update(v)
+                elif isinstance(v1, dict):
+                    cls._merge(v1, v)
+            except KeyError:
+                kws1[k] = v
+        return True
 
     @classmethod
     def combine(cls, kwargs):
@@ -167,27 +171,44 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         while i and cls.queue:
             i -= 1
             handler_class, kws = cls.queue[i]
+
+            if kws.get('actor') != kwargs.get('actor') \
+            or kws.get('targets') != kwargs.get('targets'):
+                continue
+
             try:
                 # attempting to combine the action described by kwargs with
                 # existing actions. If the returned value is True, we exit
                 # as the kwargs-action has been merged in the kws action
 
-                if cls._combinators[kws['verb']](cls, kwargs) is True \
-                and ActionHandler._merge(kws, kwargs):
+                if cls._combinators[kws['verb']](cls, kwargs) is True:
+                    cls._merge(kws, kwargs)
                     return True
             except KeyError:
                 pass
 
             try:
                 if handler_class._combinators[kwargs['verb']](
-                handler_class, kws) is True \
-                and ActionHandler._merge(kwargs, kws):
+                handler_class, kws) is True:
+                    handler_class._merge(kwargs, kws)
                     del cls.queue[i]
             except KeyError:
                 pass
 
+    def group(self, newer_kw, older_kw):
+        """
+        Default grouping implementation. Groups if at least the targets or
+        the related objects are the same
+        """
+        from .models import GM2M_ATTRS
+        diff = [a for a in GM2M_ATTRS if older_kw.get(a) != newer_kw.get(a)]
+        if len(diff) < 2:
+            # a matching action has been found, update the older_kw dict
+            # without overwriting
+            return True
+
     @classmethod
-    def group(cls, kwargs):
+    def _group(cls, kwargs):
         """
         Determines if an action described by the kwargs should be merged with
         one of its predecessors or not. Can be overridden to customize the
@@ -219,35 +240,20 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         to_tstamp = kwargs.pop('timestamp')
         from_tstamp = to_tstamp - grouping_delay
 
-        gm2ms = {attr: kwargs.pop(attr, None) for attr in GM2M_ATTRS}
-
         actor = kwargs.pop('actor')
         verb = kwargs.pop('verb')
-        kws = dict(
-            actor_ct=get_content_type(actor),
-            actor_pk=actor.pk,
-            verb=verb
-        )
 
         # try and retrieve recent existing action, as well as difference in
         # targets and related objects
         for hdlr_cls, kwg in queue:
             tstamp = kwg['timestamp']
-            if kwg['verb'] != verb \
+            if kwg['verb'] != verb or kwg['actor'] != actor \
             or grouping and (tstamp < from_tstamp or tstamp > to_tstamp):
                 continue
-            diff = [a for a in GM2M_ATTRS if kwg.get(a) != gm2ms[a]]
-            if len(diff) < 2:
-                # a matching action has been found, sync the diff, update the
-                # data and return False
-                for attr in diff:
-                    kwg[attr].update(gm2ms[attr])
-                try:
-                    kwargs.update(kwg['data'])
-                except KeyError:
-                    pass
-                if kwargs:
-                    kwg['data'] = kwargs
+
+            if cls.group(kwargs, kwg):
+                # do group
+                cls._merge(kwg, kwargs)
                 return True
 
         if not grouping:
@@ -257,19 +263,25 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         for action in Action.objects.db_manager(actor._state.db) \
                 .prefetch_related(*GM2M_ATTRS) \
                 .filter(timestamp__gte=from_tstamp,
-                        timestamp__lte=to_tstamp, **kws):
+                        timestamp__lte=to_tstamp,
+                        actor_ct=get_content_type(actor),
+                        actor_pk=actor.pk,
+                        verb=verb):
 
-            diff = [a for a in GM2M_ATTRS
-                    if set(getattr(action, a).all()) != gm2ms[a]]
-            if len(diff) < 2:
-                # a matching action has been found, sync the diff, update the
-                # data and return False
-                for attr in diff:
-                    setattr(action, attr,
-                            gm2ms[attr].union(getattr(action, attr).all()))
-                kwargs.update(action.data or {})
-                if kwargs:
-                    action.data = kwargs
+            action_kws = {}
+            for field in ['data', 'level', 'related', 'targets']:
+                value = getattr(action, field)
+                if field in GM2M_ATTRS:
+                    value = set(value.all())
+                if field == 'data':
+                    action_kws.update(value)
+                else:
+                    action_kws[field] = value
+
+            if cls.group(kwargs, action_kws):
+                cls._merge(action_kws, kwargs)
+                for k, v in action_kws.items():
+                    setattr(action, k, v)
                 action.save()
                 return True
 

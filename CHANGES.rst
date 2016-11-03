@@ -14,6 +14,11 @@ v0.3.1 (03-11-2016)
 
 - grouping only occurs at save time
 
+v0.3.2 (04-11-2016)
+-------------------
+
+- add grouping customization via action handler methods
+
 
 v0.2
 ====

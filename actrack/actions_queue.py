@@ -35,8 +35,9 @@ class ThreadActionsQueue(local):
         # avoids circular imports
         from .models import Action, DeletedItem, GM2M_ATTRS
 
-        for hdlr_class, kwargs in self.registry:
-            if hdlr_class.group(kwargs) is True:
+        while self.registry:
+            hdlr_class, kwargs = self.registry.pop()
+            if hdlr_class._group(kwargs) is True:
                 # the action has been merged with other ones, it won't be saved
                 continue
 
@@ -44,16 +45,9 @@ class ThreadActionsQueue(local):
                      for attr in GM2M_ATTRS}
 
             # there must be an actor and a timestamp
-            actor = kwargs.pop('actor')
             # TODO: use bulk_create
-            action = Action.objects.db_manager(actor._state.db).create(
-                verb=kwargs.pop('verb'),
-                actor_ct=get_content_type(actor),
-                actor_pk=actor.pk,
-                timestamp=kwargs.pop('timestamp'),
-                level=kwargs.pop('level'),
-                data=kwargs
-            )
+            action = Action.objects.db_manager(kwargs['actor']._state.db)\
+                           .create(**kwargs)
 
             for attr in GM2M_ATTRS:
                 l = gm2ms[attr]

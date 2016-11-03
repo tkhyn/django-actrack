@@ -251,17 +251,20 @@ Sometimes, actions should be combined. Either because 2 same actions with
 different arguments occurred at the same time, because two actions are
 redundant and should be merged, or for whatever app-dependant reason.
 
-For that purpose, an action handler can provide a ``combine`` class method.
-The method takes the keyword arguments that would be passed to the 'Action'
-constructor, and can make use of ``cls.queue``, a registry of all the
-previously added keyword arguments in this request.
+Only actions with the same actor and targets can be combined.
 
-The ``combine`` class method can manipulate the registry (remove or update
-items), and should return ``False`` to prevent the current item from being added
-to it.
+Action handlers can define custom ``combine_with_[verb]`` methods that
+determine what to do when a ``verb`` action is already in the queue. The method
+takes the keyword arguments that would be passed to the 'Action'
+constructor, and can make use of ``self.queue``, a registry of all the
+previously added keyword arguments in this request. When this method returns
+``True``, the currently logged action is discarded. In this case, it is the
+responsibility of ``combine_with_[verb]`` to amend the action to which the
+discarded action is combined.
 
-When a request finishes, all the ``kwargs`` in the registry are saved into the
-database.
+Note that the combination occurs when the action is logged. If an action is
+combined / discarded, it is not placed into the queue. The queue is saved to
+the database when a request finishes, after Grouping_ takes palce.
 
 
 Grouping
@@ -270,14 +273,19 @@ Grouping
 When the same action is repeated over a number of objects or on the same
 object, it is useless to show very similar actions a number of times.
 
-``django-actrack`` can detect if an action that is being logged is similar to
-recent actions and, if it finds one, it amends it instead of creating a new
-one.
+``django-actrack`` provides a way to check if an action that is being logged
+is similar to recent actions and, if it finds one, it amends it instead of
+creating a new one.
 
 The definition of 'recent' can be changed by the ``GROUPING_DELAY`` setting, in
 seconds. Individually, it is also possible to change this delay or disable
 action grouping when calling ``actrack.log`` using the ``grouping_delay``
 argument.
+
+By default, an action is considered 'similar' if it has the same actor, and at
+least the same `targets` or `related` objects. This can be customized by
+
+Grouping only occurs when the action queue is saved.
 
 
 Deleted items
