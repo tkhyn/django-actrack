@@ -6,7 +6,6 @@ from importlib import import_module
 from datetime import timedelta
 from copy import copy
 
-from django.forms.models import model_to_dict
 from django.utils.translation import ugettext as _
 from django.utils import six
 from django.utils.timesince import timesince
@@ -32,11 +31,9 @@ class ActionHandlerMetaclass(type):
             combinators[verb] = m
 
         try:
-            group = attrs['group']
-            if not isinstance(group, classmethod):
-                attrs['group'] = classmethod(group)
+            group = classmethod(attrs.pop('group'))
         except KeyError:
-            pass
+            group = ActionHandler.group
 
         subclass = super(ActionHandlerMetaclass, mcs).__new__(mcs, name,
                                                               bases, attrs)
@@ -46,6 +43,8 @@ class ActionHandlerMetaclass(type):
             mcs.handler_classes[subclass.verb] = subclass
         else:
             subclass._combinators = {}
+
+        subclass.group = group
 
         return subclass
 
@@ -196,8 +195,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
             except KeyError:
                 pass
 
-    @classmethod
-    def group(cls, newer_kw, older_kw):
+    def group(self, newer_kw, older_kw):
         """
         Default grouping implementation. Groups if at least the targets or
         the related objects are the same
