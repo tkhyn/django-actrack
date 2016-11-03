@@ -273,14 +273,19 @@ Grouping
 When the same action is repeated over a number of objects or on the same
 object, it is useless to show very similar actions a number of times.
 
-``django-actrack`` can detect if an action that is being logged is similar to
-recent actions and, if it finds one, it amends it instead of creating a new
-one.
+``django-actrack`` provides a way to check if an action that is being logged
+is similar to recent actions and, if it finds one, it amends it instead of
+creating a new one.
 
 The definition of 'recent' can be changed by the ``GROUPING_DELAY`` setting, in
 seconds. Individually, it is also possible to change this delay or disable
 action grouping when calling ``actrack.log`` using the ``grouping_delay``
 argument.
+
+By default, an action is considered 'similar' if it has the same actor, and at
+least the same `targets` or `related` objects. This can be customized by
+
+Grouping only occurs when the action queue is saved.
 
 
 Deleted items
