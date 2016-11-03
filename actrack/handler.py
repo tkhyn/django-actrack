@@ -201,6 +201,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         for a in cls.queue:
             if not a[1].get('__current__', False):
                 queue.append(a)
+        kwargs.pop('__current__')
 
         grouping = kwargs.pop('grouping_delay', GROUPING_DELAY)
 
