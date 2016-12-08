@@ -242,12 +242,14 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
         actor = kwargs.pop('actor')
         verb = kwargs.pop('verb')
+        using = kwargs.pop('using', None)
 
         # try and retrieve recent existing action, as well as difference in
         # targets and related objects
         for hdlr_cls, kwg in queue:
             tstamp = kwg['timestamp']
             if kwg['verb'] != verb or kwg['actor'] != actor \
+            or using != kwg.get('using', None) \
             or grouping and (tstamp < from_tstamp or tstamp > to_tstamp):
                 continue
 

@@ -46,8 +46,8 @@ class ThreadActionsQueue(local):
 
             # there must be an actor and a timestamp
             # TODO: use bulk_create
-            action = Action.objects.db_manager(kwargs['actor']._state.db)\
-                           .create(**kwargs)
+            db = kwargs.pop('using', kwargs['actor']._state.db)
+            action = Action.objects.db_manager(db).create(**kwargs)
 
             for attr in GM2M_ATTRS:
                 l = gm2ms[attr]
