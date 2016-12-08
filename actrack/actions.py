@@ -45,7 +45,7 @@ def create_action(verb, **kwargs):
 
     # create the action and set 'normal' fields
     data_keys = set(kwargs.keys()).difference(
-        ['grouping_delay', 'verb', 'actor', 'timestamp', 'level'] +
+        ['grouping_delay', 'verb', 'actor', 'timestamp', 'level', 'using'] +
         list(GM2M_ATTRS)
     )
     kwargs['data'] = {f: kwargs.pop(f) for f in data_keys}

@@ -181,7 +181,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
                 # existing actions. If the returned value is True, we exit
                 # as the kwargs-action has been merged in the kws action
 
-                if cls._combinators[kws['verb']](cls, kwargs) is True:
+                if cls._combinators[kws['verb']](cls, kwargs, kws) is True:
                     cls._merge(kws, kwargs)
                     return True
             except KeyError:
@@ -189,7 +189,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
             try:
                 if handler_class._combinators[kwargs['verb']](
-                handler_class, kws) is True:
+                handler_class, kws, kwargs) is True:
                     handler_class._merge(kwargs, kws)
                     del cls.queue[i]
             except KeyError:
@@ -242,12 +242,14 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
         actor = kwargs.pop('actor')
         verb = kwargs.pop('verb')
+        using = kwargs.pop('using', None)
 
         # try and retrieve recent existing action, as well as difference in
         # targets and related objects
         for hdlr_cls, kwg in queue:
             tstamp = kwg['timestamp']
             if kwg['verb'] != verb or kwg['actor'] != actor \
+            or using != kwg.get('using', None) \
             or grouping and (tstamp < from_tstamp or tstamp > to_tstamp):
                 continue
 
