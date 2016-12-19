@@ -31,9 +31,9 @@ class ActionHandlerMetaclass(type):
             combinators[verb] = m
 
         try:
-            group = classmethod(attrs.pop('group'))
+            group = attrs.pop('group')
         except KeyError:
-            group = ActionHandler.group
+            group = None
 
         subclass = super(ActionHandlerMetaclass, mcs).__new__(mcs, name,
                                                               bases, attrs)
@@ -44,7 +44,8 @@ class ActionHandlerMetaclass(type):
         else:
             subclass._combinators = {}
 
-        subclass.group = group
+        if group != 'inherit':
+            subclass.group = group and classmethod(group) or ActionHandler.group
 
         return subclass
 
@@ -173,7 +174,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
             handler_class, kws = cls.queue[i]
 
             if kws.get('actor') != kwargs.get('actor') \
-            or kws.get('targets') != kwargs.get('targets'):
+            or not kwargs.get('targets').issubset(kws.get('targets')):
                 continue
 
             try:
