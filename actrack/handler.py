@@ -173,7 +173,7 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
             handler_class, kws = cls.queue[i]
 
             if kws.get('actor') != kwargs.get('actor') \
-            or kws.get('targets') != kwargs.get('targets'):
+            or not kwargs.get('targets').issubset(kws.get('targets')):
                 continue
 
             try:
