@@ -316,6 +316,16 @@ where ``object`` is the object being deleted. The value stored in
 ``serialization`` can be customized on a per-instance basis using the
 ``deleted_item_serialization`` method.
 
+.. warning::
+
+    If you are logging an action involving an instance while deleting it
+    (typically within a `pre_delete` or `post_delete` signal handler), you need
+    to turn it into a 'deleted item' first. This can be done using the function
+    `actrack.deletion.get_del_item` which takes the instance as an argument and
+    returns a deleted item instance. Be careful, get_del_item creates an entry
+    for a deleted item in the database, so make sure you call it only when you
+    are actually deleting an instance
+
 
 Read / unread actions
 ---------------------
