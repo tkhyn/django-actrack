@@ -1,7 +1,7 @@
 django-actrack
 ==============
 
-|copyright| 2014 Thomas Khyn
+|copyright| 2014-2017 Thomas Khyn
 
 An activity tracker for django.
 
