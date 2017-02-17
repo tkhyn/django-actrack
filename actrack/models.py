@@ -318,6 +318,14 @@ class DelItemsRegistry(local):
     def add(self, instance, del_item):
         self.items.append((instance, del_item))
 
+    def remove(self, instance):
+        for i, item in enumerate(self.items):
+            if item[0] == instance:
+                break
+        else:
+            return
+        self.items.pop(i)
+
     def __getitem__(self, instance):
         for i in self.items:
             if i[0] == instance:
