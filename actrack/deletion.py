@@ -11,6 +11,50 @@ class DelItemDescriptionWarning(RuntimeWarning):
     pass
 
 
+def get_del_item(instance):
+
+    from .models import DeletedItem
+
+    try:
+        # retrieve the existing deleted item
+        del_item = DeletedItem.registry[instance]
+    except KeyError:
+        # extract instance description to generate new deleted item
+
+        opts = instance._meta
+
+        try:
+            description = instance.deleted_item_description()
+        except AttributeError:
+            description = six.text_type(instance)
+            warnings.warn(
+                'Description for an instance of model "%s.%s" was '
+                'generated from implicit conversion to string. You may '
+                'want to add a "deleted_item_description" method to the '
+                'model.' % (opts.app_label, opts.object_name),
+                DelItemDescriptionWarning)
+
+        try:
+            serialization = instance.deleted_item_serialization()
+        except AttributeError:
+            serialization = {'pk': instance.pk}
+            warnings.warn(
+                'Serialization for an instance of model "%s.%s" was '
+                'generated automatically from the primary key. You may '
+                'want to add a "deleted_item_serialization" method to the '
+                'model.' % (opts.app_label, opts.object_name),
+                DelItemDescriptionWarning)
+
+        del_item = DeletedItem.objects.create(
+            ctype=ContentType.objects.get_for_model(instance.__class__),
+            description=description, serialization=serialization
+        )
+
+        DeletedItem.registry.add(instance, del_item)
+
+    return del_item
+
+
 def handle_deleted_items(sender, **kwargs):
     """
     Creates the matching DeletedItem instances corresponding to the list of
@@ -18,7 +62,6 @@ def handle_deleted_items(sender, **kwargs):
     """
 
     from .models import DeletedItem
-    from .actions_queue import thread_actions_queue
 
     # the objects being deleted
     instances = kwargs.pop('del_objs')
@@ -40,42 +83,7 @@ def handle_deleted_items(sender, **kwargs):
         inst_ct = ContentType.objects.get_for_model(inst.__class__)
         inst_id = inst.pk
 
-        try:
-            # retrieve the existing deleted item
-            del_item = DeletedItem.registry[inst]
-        except KeyError:
-            # extract instance description to generate new deleted item
-
-            opts = inst._meta
-
-            try:
-                description = inst.deleted_item_description()
-            except AttributeError:
-                description = six.text_type(inst)
-                warnings.warn(
-                    'Description for an instance of model "%s.%s" was '
-                    'generated from implicit conversion to string. You may '
-                    'want to add a "deleted_item_description" method to the '
-                    'model.' % (opts.app_label, opts.object_name),
-                    DelItemDescriptionWarning)
-
-            try:
-                serialization = inst.deleted_item_serialization()
-            except AttributeError:
-                serialization = {'pk': inst.pk}
-                warnings.warn(
-                    'Serialization for an instance of model "%s.%s" was '
-                    'generated automatically from the primary key. You may '
-                    'want to add a "deleted_item_serialization" method to the '
-                    'model.' % (opts.app_label, opts.object_name),
-                    DelItemDescriptionWarning)
-
-            del_item = DeletedItem.objects.create(
-                ctype=inst_ct, description=description,
-                serialization=serialization
-            )
-
-            DeletedItem.registry.add(inst, del_item)
+        del_item = get_del_item(inst)
 
         # update in database
         if hasattr(sender, 'content_type_field_name'):
@@ -90,4 +98,4 @@ def handle_deleted_items(sender, **kwargs):
         else:
             # targets or related field update via through model manager
             through_instances.filter(gm2m_ct=inst_ct, gm2m_pk=inst_id) \
-                             .update(gm2m_ct=delitem_ct, gm2m_pk=del_item.pk)
+                .update(gm2m_ct=delitem_ct, gm2m_pk=del_item.pk)
