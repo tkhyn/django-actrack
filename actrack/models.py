@@ -25,8 +25,8 @@ class Action(models.Model):
     may be related to other objects
     """
 
-    actor_ct = models.ForeignKey(ContentType)
-    actor_pk = models.CharField(max_length=255)
+    actor_ct = models.ForeignKey(ContentType, null=True)
+    actor_pk = models.CharField(max_length=255, null=True)
     actor = generic.GenericForeignKey('actor_ct', 'actor_pk')
 
     # using hidden relations so that the related objects' model classes are

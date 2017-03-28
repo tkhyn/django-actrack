@@ -41,12 +41,29 @@ class ThreadActionsQueue(local):
                 # the action has been merged with other ones, it won't be saved
                 continue
 
+            db = kwargs.pop('using', None)
+            if not db:
+                for o in {kwargs.get('actor', None)} | \
+                         kwargs.get('targets', set()) | \
+                         kwargs.get('related', set()):
+                    try:
+                        db = o._state.db
+                        break
+                    except AttributeError:
+                        pass
+                else:
+                    # cannot deduct database, raise error
+                    raise RuntimeError(
+                        'Cannot deduct database from owner, targets or '
+                        'related objects. Please use the "using" keyword to '
+                        'provide a database. Action arguments:\n%s' %
+                        repr(kwargs),
+                    )
+
             gm2ms = {attr: to_set(kwargs.pop(attr, None))
                      for attr in GM2M_ATTRS}
 
-            # there must be an actor and a timestamp
             # TODO: use bulk_create
-            db = kwargs.pop('using', kwargs['actor']._state.db)
             action = Action.objects.db_manager(db).create(**kwargs)
 
             for attr in GM2M_ATTRS:
