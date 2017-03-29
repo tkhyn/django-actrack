@@ -6,7 +6,7 @@ from importlib import import_module
 from datetime import timedelta
 from copy import copy
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext as _, ungettext as _n
 from django.utils import six
 from django.utils.timesince import timesince
 
@@ -91,17 +91,27 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
 
     def get_text(self):
         a = self.action
+        targets = a.targets.all()
         ctxt = {
             'actor': str(a.actor),
             'verb': a.verb,
-            'targets': str_enum(a.targets.all()),
+            'targets': str_enum(targets),
             'related': str_enum(a.related.all())
         }
-        if ctxt['related']:
-            return _('%(actor)s %(verb)s %(targets)s '
-                     'in relation to %(related)s') % ctxt
+        if a.actor:
+            if ctxt['related']:
+                return _('%(actor)s %(verb)s %(targets)s '
+                         'in relation to %(related)s') % ctxt
+            else:
+                return _('%(actor)s %(verb)s %(targets)s') % ctxt
         else:
-            return _('%(actor)s %(verb)s %(targets)s') % ctxt
+            if ctxt['related']:
+                return _n('%(target)s was %(verb)s in relation to %(related)s',
+                          '%(target)s were %(verb)s in relation to %(related)s',
+                          len(targets)) % ctxt
+            else:
+                return _n('%(target)s was %(verb)s', '%(target)s were %(verb)s',
+                          len(targets)) % ctxt
 
     def get_timeinfo(self):
         return _('%(time)s ago') % {'time': timesince(self.action.timestamp)}
@@ -267,8 +277,8 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
                 .prefetch_related(*GM2M_ATTRS) \
                 .filter(timestamp__gte=from_tstamp,
                         timestamp__lte=to_tstamp,
-                        actor_ct=get_content_type(actor),
-                        actor_pk=actor.pk,
+                        actor_ct=actor and get_content_type(actor),
+                        actor_pk=actor and actor.pk,
                         verb=verb):
 
             action_kws = {}

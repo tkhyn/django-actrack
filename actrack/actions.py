@@ -24,7 +24,7 @@ def create_action(verb, **kwargs):
     kwargs.pop('signal', None)
 
     # the actor is the sender
-    kwargs['actor'] = kwargs.pop('sender')
+    kwargs['actor'] = kwargs.pop('sender', None)
 
     # default timestamp
     kwargs.setdefault('timestamp', now())

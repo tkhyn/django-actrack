@@ -37,6 +37,11 @@ v0.3.5 (17-02-2017)
 - add 'get_del_item' function to enable logging during deletion
 - add 'DeletedItems.registry.remove' to enable cleanup of DeletedItems
 
+v0.3.6 (29-03-2017)
+-------------------
+
+- allow undefined actor on action creation
+
 
 v0.2
 ====
