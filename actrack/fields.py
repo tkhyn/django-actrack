@@ -16,7 +16,7 @@ class OneToOneField(models.OneToOneField):
     related_accessor_class = ReverseOneToOneDescriptor
 
 
-class VerbsField(six.with_metaclass(models.SubfieldBase, models.TextField)):
+class VerbsField(models.TextField):
     """
     Defines a field to store a set of verbs. It is preferable to use a set of
     verbs than a M2M field in Follow for performance reasons
@@ -34,6 +34,11 @@ class VerbsField(six.with_metaclass(models.SubfieldBase, models.TextField)):
             kwargs['token'] = self.token
         return name, path, args, kwargs
 
+    def from_db_value(self, value, expression, connection, context):
+        if value is None:
+            return set()
+        return set(value.split(self.token))
+
     def to_python(self, value):
         if not value:
             return set()
@@ -45,7 +50,7 @@ class VerbsField(six.with_metaclass(models.SubfieldBase, models.TextField)):
         if not value:
             return
         assert(isinstance(value, (list, tuple, set)))
-        return self.token.join([str(s) for s in value])
+        return self.token.join({str(s) for s in value})
 
     def value_to_string(self, obj):
         value = self._get_val_from_obj(obj)
