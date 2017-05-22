@@ -20,6 +20,9 @@ class Project(Base):
     def deleted_item_description(self):
         return 'Project %d' % id(self)
 
+    def deleted_item_serialization(self):
+        return {'project': [{'pk': self.pk}]}
+
 
 @actrack.connect
 class Task(Base):

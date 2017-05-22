@@ -13,4 +13,10 @@ class TestAppConfig(AppConfig):
         from actrack.managers.inst import get_user_model
 
         # connects the user model
-        actrack.connect(get_user_model())
+        User = get_user_model()
+
+        actrack.connect(User)
+
+        User.deleted_item_description = User.get_full_name
+        User.deleted_item_serialization = \
+            lambda u: {'user': [{'pk': u.pk}]}

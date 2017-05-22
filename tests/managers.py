@@ -113,7 +113,8 @@ class ModelTrackingTests(TestCase):
         self.user = self.user_model.objects.create()
         self.project = Project.objects.create()
 
-        actrack.track(self.user, Project, verbs='created', actor_only=False)
+        actrack.track(self.user, Project, verbs='created', actor_only=False,
+                      using=self.user._state.db)
         self.log(self.user, 'created', targets=self.project, commit=True)
 
     def test_project_in_feed(self):
