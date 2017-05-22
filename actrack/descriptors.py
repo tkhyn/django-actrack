@@ -2,11 +2,18 @@
 Descriptors to be used as attributes for models.
 """
 
-from django.db.models.fields import related
+try:
+    # django 1.11
+    from django.db.models.fields.related_descriptors \
+        import ReverseOneToOneDescriptor as OriginalReverseOneToOneDescriptor
+except ImportError:
+    from django.db.models.fields.related \
+        import SingleRelatedObjectDescriptor as OriginalReverseOneToOneDescriptor
+
 from django.db.transaction import atomic
 
 
-class SingleRelatedObjectDescriptor(related.SingleRelatedObjectDescriptor):
+class ReverseOneToOneDescriptor(OriginalReverseOneToOneDescriptor):
     """
     For OneToOneField, inspiration from django-annoying
     """
@@ -18,7 +25,7 @@ class SingleRelatedObjectDescriptor(related.SingleRelatedObjectDescriptor):
             model = self.related.model
 
         try:
-            return super(SingleRelatedObjectDescriptor, self) \
+            return super(ReverseOneToOneDescriptor, self) \
                 .__get__(instance, instance_type)
         except model.DoesNotExist:
             # actually a RelatedObjectDoesNotExist exception
@@ -29,7 +36,7 @@ class SingleRelatedObjectDescriptor(related.SingleRelatedObjectDescriptor):
                 delattr(instance, self.cache_name)
             except AttributeError:
                 pass
-            return super(SingleRelatedObjectDescriptor, self) \
+            return super(ReverseOneToOneDescriptor, self) \
                 .__get__(instance, instance_type)
 
 

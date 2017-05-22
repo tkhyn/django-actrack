@@ -6,10 +6,8 @@ from django.utils.translation import ugettext as _
 from django.db.models import Q
 from django.db import router
 
-from .models import Tracker, GM2M_ATTRS
 from .handler import ActionHandlerMetaclass
 from .actions_queue import thread_actions_queue
-from .gfk import get_content_type, get_pk
 from .signals import log as log_action
 from .helpers import to_set
 
@@ -18,6 +16,8 @@ def create_action(verb, **kwargs):
     """
     Creates an action
     """
+
+    from .models import GM2M_ATTRS
 
     # removes the 'signal' keyword in kwargs so that it is not taken into
     # account in the action's data
@@ -74,6 +74,9 @@ def track(user, to_track, log=False, **kwargs):
                                the actor?
     """
 
+    from .models import Tracker
+    from .gfk import get_content_type, get_pk
+
     # convert to_track and verbs to sets
     to_track = to_set(to_track)
     kwargs['verbs'] = to_set(kwargs.get('verbs', None))
@@ -89,7 +92,7 @@ def track(user, to_track, log=False, **kwargs):
         if pk:
             db = obj._state.db
         elif not db:
-            db = router.db_for_read(obj)
+            db = router.db_for_read(obj._meta.model)
             db_from_model = True
 
     if db_from_model:
@@ -141,6 +144,9 @@ def untrack(user, to_untrack, verbs=None, log=False, using=None):
     :param verbs: the verbs to untrack. None or  means 'untrack all verbs'.
     :param log: should an action be logged if a tracker is deleted?
     """
+
+    from .models import Tracker
+    from .gfk import get_content_type
 
     # convert to_track and verbs to sets
     to_untrack = to_set(to_untrack)

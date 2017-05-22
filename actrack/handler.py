@@ -11,7 +11,6 @@ from django.utils import six
 from django.utils.timesince import timesince
 
 from .helpers import str_enum
-from .gfk import get_content_type
 from .settings import DEFAULT_HANDLER, GROUPING_DELAY, DEFAULT_LEVEL
 from .actions_queue import thread_actions_queue
 
@@ -227,6 +226,8 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
         :return: ``True`` if the action described by the kwargs has been grouped
         and should not be added to the queue
         """
+
+        from .gfk import get_content_type
 
         kwargs['__current__'] = True
         queue = []

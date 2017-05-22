@@ -42,6 +42,10 @@ v0.3.6 (29-03-2017)
 
 - allow undefined actor on action creation
 
+v0.3.7 (22-05-2017)
+-------------------
+
+- django 1.11 compatibility
 
 v0.2
 ====

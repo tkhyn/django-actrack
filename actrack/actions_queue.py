@@ -1,6 +1,5 @@
 from threading import local
 
-from .gfk import get_content_type
 from .helpers import to_set
 
 

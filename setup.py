@@ -34,10 +34,8 @@ setup(
     keywords=[],
     classifiers=[
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Development Status :: %s' % DEV_STATUS[dev_status],
@@ -48,8 +46,8 @@ setup(
     ],
     packages=find_packages(exclude=('tests',)),
     install_requires=(
-        'django>=1.4',
-        'django-gm2m>=0.2.3',
+        'django>=1.8',
+        'django-gm2m>=0.4.9',
         'jsonfield',
     ),
 )
