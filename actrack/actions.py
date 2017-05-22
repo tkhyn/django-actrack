@@ -92,7 +92,7 @@ def track(user, to_track, log=False, **kwargs):
         if pk:
             db = obj._state.db
         elif not db:
-            db = router.db_for_read(obj)
+            db = router.db_for_read(obj._meta.model)
             db_from_model = True
 
     if db_from_model:
