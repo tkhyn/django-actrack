@@ -2,7 +2,7 @@ from threading import local
 
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.utils.timezone import now
 
 from gm2m import GM2MField
@@ -27,7 +27,7 @@ class Action(models.Model):
 
     actor_ct = models.ForeignKey(ContentType, null=True)
     actor_pk = models.CharField(max_length=255, null=True)
-    actor = generic.GenericForeignKey('actor_ct', 'actor_pk')
+    actor = GenericForeignKey('actor_ct', 'actor_pk')
 
     # using hidden relations so that the related objects' model classes are
     # not cluttered. The reverse relations are available through the
