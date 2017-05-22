@@ -1,6 +1,5 @@
 import warnings
 
-from django.contrib.contenttypes.models import ContentType
 from django.utils import six
 
 # exposes CASCADE, CASCADE_SIGNAL, etc ...
@@ -13,6 +12,7 @@ class DelItemDescriptionWarning(RuntimeWarning):
 
 def get_del_item(instance):
 
+    from django.contrib.contenttypes.models import ContentType
     from .models import DeletedItem
 
     try:
@@ -61,6 +61,7 @@ def handle_deleted_items(sender, **kwargs):
     objects provided under the ``objs`` keyword argument
     """
 
+    from django.contrib.contenttypes.models import ContentType
     from .models import DeletedItem
 
     # the objects being deleted

@@ -1,7 +1,6 @@
 from django.apps import AppConfig
 
 import actrack
-from actrack.managers.inst import get_user_model
 
 
 class TestAppConfig(AppConfig):
@@ -11,6 +10,7 @@ class TestAppConfig(AppConfig):
     def ready(self):
 
         from . import action_handlers
+        from actrack.managers.inst import get_user_model
 
         # connects the user model
         actrack.connect(get_user_model())

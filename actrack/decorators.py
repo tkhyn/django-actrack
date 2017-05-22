@@ -1,9 +1,5 @@
-from .gfk import add_relation
-from .models import Action, Tracker, GM2M_ATTRS
 from .descriptors import ActrackDescriptor
-from .managers.inst import InstActionManager, InstTrackerManager
 from .settings import ACTIONS_ATTR, TRACKERS_ATTR
-from .deletion import CASCADE, DO_NOTHING_SIGNAL
 
 
 def connect(*args, **kwargs):
@@ -22,6 +18,12 @@ def connect(*args, **kwargs):
     connect(ExistingModel, **options)
 
     """
+
+    # to avoid django 1.9+ complaining about apps not loaded yet
+    from .gfk import add_relation
+    from .models import Action, Tracker, GM2M_ATTRS
+    from .managers.inst import InstActionManager, InstTrackerManager
+    from .deletion import CASCADE, DO_NOTHING_SIGNAL
 
     def mk_decorator(use_del_items=True):
 
