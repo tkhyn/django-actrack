@@ -27,9 +27,9 @@ class DeletionTests(TestCase):
 
         self.project = Project.objects.create()
 
-        self.task1 = Task.objects.create(parent=self.project)
-        self.task2 = Task.objects.create(parent=self.project)
-        self.task3 = Task.objects.create(parent=self.project)
+        self.task1 = Task.objects.create(project=self.project)
+        self.task2 = Task.objects.create(project=self.project)
+        self.task3 = Task.objects.create(project=self.project)
 
         actrack.track(self.user0, self.project, actor_only=False)
 

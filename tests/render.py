@@ -10,7 +10,7 @@ class RenderTests(TestCase):
         self.user0 = self.user_model.objects.create(username='user0')
 
         self.project = Project.objects.create(name='project')
-        self.task = Task.objects.create(parent=self.project, name='task')
+        self.task = Task.objects.create(project=self.project, name='task')
 
         self.log(self.user0, 'created', targets=self.task, related=self.project,
                  commit=True)

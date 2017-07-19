@@ -1,4 +1,3 @@
-import django
 from django.db import models
 
 import actrack
@@ -26,7 +25,7 @@ class Project(Base):
 
 @actrack.connect
 class Task(Base):
-    parent = models.ForeignKey(Project)
+    project = models.ForeignKey(Project)
 
     def deleted_item_description(self):
         return 'Task %d' % id(self)
@@ -34,6 +33,7 @@ class Task(Base):
     def deleted_item_serialization(self):
         return {'task': [{'pk': self.pk}]}
 
-if django.VERSION < (1, 7):
-    from .apps import TestAppConfig
-    TestAppConfig().ready()
+
+@actrack.connect(use_del_items=False)
+class SubTask(Task):
+    parent = models.ForeignKey(Task)

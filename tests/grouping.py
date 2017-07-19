@@ -19,9 +19,9 @@ class GroupingTests(TestCase):
         self.user0 = self.user_model.objects.create(username='user0')
 
         self.project = Project.objects.create(name='project')
-        self.task1 = Task.objects.create(name='task1', parent=self.project)
-        self.task2 = Task.objects.create(name='task2', parent=self.project)
-        self.task3 = Task.objects.create(name='task3', parent=self.project)
+        self.task1 = Task.objects.create(name='task1', project=self.project)
+        self.task2 = Task.objects.create(name='task2', project=self.project)
+        self.task3 = Task.objects.create(name='task3', project=self.project)
 
     def log_actions(self, **kw):
         self.log(self.user0, 'created', targets=self.project, **kw)

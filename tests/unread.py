@@ -76,7 +76,7 @@ class MultipleUnreadTests(TestCase):
         self.user1 = self.user_model.objects.create(username='user1')
 
         self.project = Project.objects.create(name='project')
-        self.task = Task.objects.create(parent=self.project, name='task')
+        self.task = Task.objects.create(project=self.project, name='task')
 
         track(self.user1, self.project, actor_only=False)
         track(self.user1, self.task, actor_only=False)
