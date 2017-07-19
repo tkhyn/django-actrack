@@ -226,8 +226,8 @@ class TrackerBase(object):
                                          level__gte=READABLE_LEVEL))
 
         fetched_elsewhere = set(already_fetched)
-        for action in last_actions:
-            for t in trackers:
+        for t in trackers:
+            for action in last_actions:
                 to_mark_as_fetched_in_t = set()
                 if t.matches(action):
                     if action.timestamp < t.last_updated:
