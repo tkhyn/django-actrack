@@ -1,7 +1,7 @@
 """
 django-actrack
 An activity tracker and notifier for django
-(c) 2014 Thomas Khyn
+(c) 2014-2017 Thomas Khyn
 MIT License (see LICENSE.txt)
 """
 
