@@ -31,7 +31,8 @@ class ReverseOneToOneDescriptor(OriginalReverseOneToOneDescriptor):
             # actually a RelatedObjectDoesNotExist exception
             # this creates the object if it does not exist
             # we use get_or_create to better handle race conditions than save()
-            model.objects.get_or_create(**{self.related.field.name: instance})
+            model.objects.using(instance._state.db) \
+                .get_or_create(**{self.related.field.name: instance})
             try:
                 delattr(instance, self.cache_name)
             except AttributeError:
