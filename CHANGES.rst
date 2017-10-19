@@ -14,6 +14,49 @@ v0.3.1 (03-11-2016)
 
 - grouping only occurs at save time
 
+v0.3.2 (04-11-2016)
+-------------------
+
+- add grouping customization via action handler methods
+
+v0.3.3 (08-12-2016)
+-------------------
+
+- fix db selection via 'using' keyword
+- combine_with_* methods now require the kwargs from the 2 actions
+
+v0.3.4 (20-12-2016)
+-------------------
+
+- fix combine_with using targets inclusion rather than equality
+- add 'inherit' option for group method
+
+v0.3.5 (17-02-2017)
+-------------------
+
+- add 'get_del_item' function to enable logging during deletion
+- add 'DeletedItems.registry.remove' to enable cleanup of DeletedItems
+
+v0.3.6 (29-03-2017)
+-------------------
+
+- allow undefined actor on action creation
+
+v0.3.7 (22-05-2017)
+-------------------
+
+- django 1.11 compatibility
+
+v0.3.8 (19-07-2017)
+-------------------
+
+- deletion management fix
+
+v0.3.9 (19-10-2017)
+-------------------
+
+- reverse 1to1 descriptor getter fix (db)
+
 
 v0.2
 ====
