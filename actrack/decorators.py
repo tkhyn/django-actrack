@@ -56,7 +56,7 @@ def connect(*args, **kwargs):
             for attr in GM2M_ATTRS:
                 descriptor = getattr(Action, attr)
                 descriptor.add_relation(cls, on_delete=on_delete_tgt)
-                descriptor.field.rel.on_delete_src = on_delete_src
+                descriptor.field.remote_field.on_delete_src = on_delete_src
 
             # adding actions and trackers managers
             for name, mngr in ((ACTIONS_ATTR, InstActionManager),

@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('level', models.PositiveSmallIntegerField(default=30)),
                 ('data', jsonfield.fields.JSONField(null=True, blank=True)),
                 ('timestamp', models.DateTimeField(default=django.utils.timezone.now)),
-                ('actor_ct', models.ForeignKey(to='contenttypes.ContentType')),
+                ('actor_ct', models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE)),
                 ('related', gm2m.fields.GM2MField(related_name='actions_as_related+', through_fields=(b'gm2m_src', b'gm2m_tgt', b'gm2m_ct', b'gm2m_pk'), pk_maxlength=PK_MAXLENGTH)),
                 ('targets', gm2m.fields.GM2MField(related_name='actions_as_target+', through_fields=(b'gm2m_src', b'gm2m_tgt', b'gm2m_ct', b'gm2m_pk'), pk_maxlength=PK_MAXLENGTH)),
             ],
@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('description', models.CharField(max_length=255)),
                 ('serialization', jsonfield.fields.JSONField()),
-                ('ctype', models.ForeignKey(to='contenttypes.ContentType')),
+                ('ctype', models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -55,8 +55,8 @@ class Migration(migrations.Migration):
                 ('actor_only', models.BooleanField(default=True)),
                 ('last_updated', models.DateTimeField(default=django.utils.timezone.now)),
                 ('fetched_elsewhere', models.ManyToManyField(related_name='_fetched_elsewhere_+', to='actrack.Action')),
-                ('tracked_ct', models.ForeignKey(to='contenttypes.ContentType')),
-                ('user', models.ForeignKey(related_name='trackers+', to=settings.USER_MODEL)),
+                ('tracked_ct', models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(related_name='trackers+', to=settings.USER_MODEL, on_delete=models.CASCADE)),
             ],
             bases=(models.Model, actrack.models.TrackerBase),
         ),
@@ -65,7 +65,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('unread_actions', models.ManyToManyField(related_name='unread_in', to='actrack.Action')),
-                ('user', actrack.fields.OneToOneField(related_name='unread_actions', to=settings.USER_MODEL)),
+                ('user', actrack.fields.OneToOneField(related_name='unread_actions', to=settings.USER_MODEL, on_delete=models.CASCADE)),
             ],
         ),
     ]
