@@ -16,6 +16,12 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+# -- Django setup ------------------------------------------------------------
+
+from django.conf import settings
+
+# Django settings
+settings.configure()
 
 # -- Project information -----------------------------------------------------
 
