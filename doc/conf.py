@@ -20,13 +20,15 @@
 # -- Project information -----------------------------------------------------
 
 project = u'django-actrack'
-copyright = u'2018, Thomas Khyn'
+copyright = u'2014-2018, Thomas Khyn'
 author = u'Thomas Khyn'
 
-# The short X.Y version
-version = u''
-# The full version, including alpha/beta/rc tags
-release = u''
+from actrack import __version__
+
+# The short X.Y version.
+version = __version__
+# The full version, including alpha/beta/rc tags.
+release = version
 
 
 # -- General configuration ---------------------------------------------------
@@ -74,7 +76,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
