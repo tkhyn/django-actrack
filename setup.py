@@ -26,7 +26,7 @@ DEV_STATUS = {'pre': '2 - Pre-Alpha',
 setup(
     name='django-actrack',
     version=__version__,
-    description='An activity tracker and notifier for django',
+    description='An activity tracker for Django',
     long_description=open(os.path.join('README.rst')).read(),
     author='Thomas Khyn',
     author_email='thomas@ksytek.com',
