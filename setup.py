@@ -30,7 +30,7 @@ setup(
     long_description=open(os.path.join('README.rst')).read(),
     author='Thomas Khyn',
     author_email='thomas@ksytek.com',
-    url='',
+    url='https://bitbucket.org/tkhyn/django-actrack',
     keywords=[],
     classifiers=[
         'Programming Language :: Python',
