@@ -1,8 +1,7 @@
 from collections import defaultdict
 from inspect import isclass
 
-from django.contrib.contenttypes.fields import GenericForeignKey, \
-                                               GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
@@ -11,6 +10,7 @@ from django.utils import six
 
 from gm2m.signals import deleting
 
+from .compat import GenericForeignKey
 from . import deletion
 
 
@@ -28,44 +28,72 @@ class ModelGFK(GenericForeignKey):
 
     def instance_pre_init(self, signal, sender, args, kwargs, **_kwargs):
         """
-        Handles initializing an object with the generic FK instead of
-        content-type/object-id fields.
+        Override that allows value to be a class
         """
         if self.name in kwargs:
             value = kwargs.pop(self.name)
-            kwargs[self.ct_field] = self.get_content_type(obj=value)
-            kwargs[self.fk_field] = get_pk(value)
+            if value is not None:
+                kwargs[self.ct_field] = self.get_content_type(obj=value)
+                kwargs[self.fk_field] = get_pk(value)
+            else:
+                kwargs[self.ct_field] = None
+                kwargs[self.fk_field] = None
 
-    def __get__(self, instance, instance_type=None):
+    def __get__(self, instance, cls=None):
+        """
+        Returns the model class instead of a model instance if the primary
+        key is None
+        Otherwise implementation is identical to GenericForeignKey.__get__
+        """
         if instance is None:
             return self
 
-        try:
-            return getattr(instance, self.cache_attr)
-        except AttributeError:
-            rel_obj = None
+        f = self.model._meta.get_field(self.ct_field)
+        ct_id = getattr(instance, f.get_attname(), None)
+        pk_val = getattr(instance, self.fk_field)
 
-            # Make sure to use ContentType.objects.get_for_id() to ensure that
-            # lookups are cached (see ticket #5570). This takes more code than
-            # the naive ``getattr(instance, self.ct_field)``, but has better
-            # performance when dealing with GFKs in loops and such.
-            f = self.model._meta.get_field(self.ct_field)
-            ct_id = getattr(instance, f.get_attname(), None)
-            if ct_id:
-                ct = self.get_content_type(id=ct_id, using=instance._state.db)
-                pk = getattr(instance, self.fk_field)
+        rel_obj = self.get_cached_value(instance, default=None)
+        if rel_obj is not None:
+            ct = self.get_content_type(obj=rel_obj, using=instance._state.db)
+            if ct_id != ct.id:
+                rel_obj = None
+            else:
+                pk = rel_obj._meta.pk
                 if pk is None:
                     # pk is None, we should return the model class
                     rel_obj = ct.model_class()
                 else:
-                    try:
-                        rel_obj = ct.get_object_for_this_type(pk=pk)
-                    except ObjectDoesNotExist:
-                        pass
-            setattr(instance, self.cache_attr, rel_obj)
-            return rel_obj
+                    # If the primary key is a remote field, use the referenced
+                    # field's to_python().
+                    to_python_field = pk
+                    # Out of an abundance of caution, avoid infinite loops.
+                    seen = {to_python_field}
+                    while to_python_field.remote_field:
+                        to_python_field = to_python_field.target_field
+                        if to_python_field in seen:
+                            break
+                        seen.add(to_python_field)
+                    pk_to_python = to_python_field.to_python
+                    if pk_to_python(pk_val) != rel_obj._get_pk_val():
+                        rel_obj = None
+                    else:
+                        return rel_obj
+        if ct_id is not None:
+            ct = self.get_content_type(id=ct_id, using=instance._state.db)
+            if pk_val is None:
+                rel_obj = ct.model_class()
+            else:
+                try:
+                    rel_obj = ct.get_object_for_this_type(pk=pk_val)
+                except ObjectDoesNotExist:
+                    pass
+        self.set_cached_value(instance, rel_obj)
+        return rel_obj
 
     def __set__(self, instance, value):
+        """
+        Override that allows value to be a class
+        """
         ct = None
         fk = None
         if value is not None:
@@ -74,7 +102,7 @@ class ModelGFK(GenericForeignKey):
 
         setattr(instance, self.ct_field, ct)
         setattr(instance, self.fk_field, fk)
-        setattr(instance, self.cache_attr, value)
+        self.set_cached_value(instance, value)
 
 
 class ActrackGenericRelation(GenericRelation):
@@ -93,7 +121,7 @@ class ActrackGenericRelation(GenericRelation):
         not use the deletion functions as such
         """
 
-        base_mngr = self.rel.to._base_manager
+        base_mngr = self.remote_field.model._base_manager
 
         if self.on_delete is not deletion.DO_NOTHING:
             # collect related objects
@@ -127,7 +155,7 @@ class ActrackGenericRelation(GenericRelation):
 
             # get signal receiver's results
             if self.on_delete in deletion.handlers_with_signal:
-                results = deleting.send(sender=self.rel.field,
+                results = deleting.send(sender=self.remote_field.field,
                                         del_objs=objs, rel_objs=qs)
             else:
                 results = []

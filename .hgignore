@@ -14,6 +14,9 @@ MANIFEST
 .tox
 .coverage
 
+# built documentation
+doc/_build
+
 # python binary files
 *.pyc
 __pycache__

@@ -44,7 +44,7 @@ class ActionHandlerMetaclass(type):
             subclass._combinators = {}
 
         if group != 'inherit':
-            subclass.group = group and classmethod(group) or ActionHandler.group
+            subclass.group = group or ActionHandler.group
 
         return subclass
 
@@ -205,7 +205,8 @@ class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
             except KeyError:
                 pass
 
-    def group(self, newer_kw, older_kw):
+    @classmethod
+    def group(cls, newer_kw, older_kw):
         """
         Default grouping implementation. Groups if at least the targets or
         the related objects are the same

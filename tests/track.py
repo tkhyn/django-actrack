@@ -1,3 +1,5 @@
+import warnings
+
 from ._base import TestCase
 
 import actrack
@@ -25,7 +27,7 @@ class TrackTests(TestCase):
     def test_track_verbs(self):
         # tracking verb 'modified' on project
         actrack.track(self.user, self.project, verbs='modified')
-        self.assertSetEqual(Tracker.objects.all()[0].verbs, set(['modified']))
+        self.assertSetEqual(Tracker.objects.all()[0].verbs, {'modified'})
 
     def test_track_log(self):
         # tracking all verbs on project, logging the tracking event
@@ -36,11 +38,13 @@ class TrackTests(TestCase):
         self.assertEqual(len(actions), 1)
         action = actions[0]
         self.assertEqual(action.actor, self.user)
-        self.assertSetEqual(set(action.targets.all()), set([self.project]))
+        self.assertSetEqual(set(action.targets.all()), {self.project})
         self.assertEqual(action.verb, 'started tracking')
 
     def test_track_model(self):
-        actrack.track(self.user, Project, verbs='created')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            actrack.track(self.user, Project, verbs='created')
         tracker = Tracker.objects.all()[0]
         self.assertEqual(tracker.tracked, Project)
 

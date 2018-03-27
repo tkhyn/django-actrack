@@ -1,7 +1,7 @@
 """
 django-actrack
 An activity tracker and notifier for django
-(c) 2014-2017 Thomas Khyn
+(c) 2014-2018 Thomas Khyn
 MIT License (see LICENSE.txt)
 """
 
@@ -46,8 +46,8 @@ setup(
     ],
     packages=find_packages(exclude=('tests',)),
     install_requires=(
-        'django>=1.8',
-        'django-gm2m>=0.4.9',
+        'django>=1.11',
+        'django-gm2m>=0.6',
         'jsonfield',
     ),
 )

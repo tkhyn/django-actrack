@@ -25,7 +25,7 @@ class Project(Base):
 
 @actrack.connect
 class Task(Base):
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
 
     def deleted_item_description(self):
         return 'Task %d' % id(self)
@@ -36,4 +36,4 @@ class Task(Base):
 
 @actrack.connect(use_del_items=False)
 class SubTask(Task):
-    parent = models.ForeignKey(Task)
+    parent = models.ForeignKey(Task, on_delete=models.CASCADE)
