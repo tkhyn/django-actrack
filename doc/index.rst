@@ -23,8 +23,16 @@ Documentation contents:
    :maxdepth: 2
 
    quick_start
-   features
+   advanced
    settings
+   api
+
+
+.. warning::
+
+   This documentation is a work in progress. Some features may be undocumented,
+   or only lightly documented. It may be necessary to have a look at the
+   `source code`_ for more details on some features.
 
 
 Indices and tables
@@ -35,3 +43,5 @@ Indices and tables
 * :ref:`search`
 
 .. |copyright| unicode:: 0xA9
+
+.. _`source code`: https://bitbucket.org/tkhyn/django-actrack/src

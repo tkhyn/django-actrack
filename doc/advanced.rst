@@ -1,130 +1,33 @@
-.. _features:
+.. _advanced:
 
-Features
-========
-
-
-``actions`` and ``trackers`` accessors
---------------------------------------
-
-All the accessors quoted below are Manager methods. The ``actions`` and
-``trackers`` attributes return special instance-specific managers constructed
-from ``instance``. All the methods - except ``trackers.tracked`` take keyword
-arguments to further filter the result queryset (verbs, timestamp ...).
-
-instance.actions.as_actor(\*\*kw)
-   All the actions where instance is the actor.
-
-instance.actions.as_target(\*\*kw)
-   All the actions where instance is among the targets.
-
-instance.actions.as_related(\*\*kw)
-   All the actions where instance is among the related objects.
-
-instance.actions.all()
-   Overrides the normal ``all`` method and returns all the actions where
-   instance is either the actor or in the targets or related objects. It is
-   a combination of the results of the 3 above methods.
-
-instance.actions.feed(\*\*kw)
-   The most useful accessor. This will work only if instance is a user, and
-   will return all the instances that match all the trackers the user is
-   associated with.
-
-instance.tracker.tracking(\*\*kw)
-   All the trackers that are tracking the instance.
-
-instance.tracker.users(\*\*kw)
-   All the users who are tracking the instance (= the owners of the trackers
-   tracking the instance returned by the above method).
-
-instance.tracker.owned(\*\*kw)
-   Works only if instance is a user, returns all the trackers owned by the
-   instance.
-
-instance.tracker.tracked(\*models, \*\*kw)
-   Works only if instance is a user, returns all the objects (various types)
-   tracked by the user. Be aware that if there are model class trackers, there
-   can be model classes in the returned set.
-
-instance.tracker.all()
-   Overrides the normal ``all`` method. If instance is a user, will return a
-   combination of ``instance.tracker.owned()`` and
-   ``instance.tracker.tracking``. If not, it returns the same as
-   ``instance.tracker.tracking``.
+Advanced features
+=================
 
 
-Advanced usage
---------------
+The :ref:`quick-start` section showed you how to log, track and retrieve
+activity related to given instances.
 
-This section lists additional keyword arguments that can be provided to
-``django-actrack``'s exposed functions.
-
-actrack.log
-...........
-
-timestamp
-   The timestamp that should be recorded for the action. If not provided, this
-   default to now.
-
-grouping_delay
-   If an action with the same verb has occurred within the last
-   ``grouping_delay`` (in seconds), it is merged with the current one. If it
-   is set to ``0``, this prevents the action from being grouped. See Grouping_
-   below. Defaults to ``GROUPING_DELAY``.
+This section provides more details on ``django-actrack`` basic workflow and
+presents some of its more advanced features.
 
 
-actrack.track
-.............
+Action creation parameters
+--------------------------
 
-``actrack.track`` can be used either to create a tracker or modify an existing
-one. It can track model instances but also model classes.
-
-log
-   If set to ``True``, the function will log an action with the verb
-   'started tracking'. Defaults to ``False``
-
-actor_only
-   Will track actions only when the provided tracked object is the actor of
-   an action. Default to ``True``.
-
-verbs
-   The verbs to track. Exclude any action that does not match the provide
-   verbs. Defaults to any verb.
+Check the API documentation for :ref:`actrack.log <actrack.log>` to learn more
+about the additional parameters that it can accept.
 
 
-actrack.untrack
-...............
+.. _ActionHandler:
 
-Deletes a tracker object or deletes some verbs from its verbs set.
-
-log
-   Same as for ``actrack.track``
-
-verbs
-   The verbs to stop tracking. If it is empty or equal to the current verbs
-   set, no verb is to be tracked anymore and the tracker is deleted. Defaults
-   to all verbs.
-
-
-actrack.connect
-...............
-
-The ``actrack.connect`` decorator can be used with or without arguments.
-
-use_del_items
-   Should the model that is to be connected use the `Deleted items`_ feature?
-   Defaults to ``True``.
-
-
-actrack.ActionHandler
-.....................
+Action handlers
+---------------
 
 For each action you are using in your code, you can create a subclass of
-``ActionHandler`` with a corresponding ``verb`` class attribute that will be
-related to this action. An instance of this handler class will be attached to
-any ``Action`` object that is created or retrieved, as the ``handler``
-attribute::
+``actrack.ActionHandler`` with a corresponding ``verb`` class attribute that
+will be related to this action. An instance of this handler class will be
+attached to any ``Action`` object that is created or retrieved, as the
+``handler`` attribute::
 
    from actrack import ActionHandler
 
@@ -141,7 +44,7 @@ attribute::
 Handlers are used to process the action. The only special methods are:
 
    render
-      Called when you call ``render`` on an Action instance
+      Called when you call ``render`` on an Action instance. See Rendering_
 
    get_text
       Returns the text associated to the action
@@ -153,15 +56,17 @@ Handlers are used to process the action. The only special methods are:
       Returns a default rendering context for the action, should you need it
       for template rendering
 
-   combine(timestamp, **kwargs) [classmethod]
-      See Combination_ below
+   combine(kwargs) [classmethod]
+      See Combination_
 
-   group(timestamp, **kwargs) [classmethod]
-      See Grouping_ below
+   group(newer_kw, older_kw) [classmethod]
+      See Grouping_
 
-See the actrack.handler module for default implementations.
+See the `actrack.handler module`_ for default implementations.
 
-You can of course add any method you wish to the ``ActionHandler`` subclasses.
+You can of course override any of the above methods in the ``ActionHandler``
+subclasses if you need to customise how certain actions should be rendered or
+combined.
 
 
 Combination
@@ -173,7 +78,7 @@ redundant and should be merged, or for whatever app-dependant reason.
 
 Only actions with the same actor and targets can be combined.
 
-Action handlers can define custom ``combine_with_[verb]`` methods that
+`Action handlers`_ can define custom ``combine_with_[verb]`` methods that
 determine what to do when a ``verb`` action is already in the queue. The method
 takes the keyword arguments that would be passed to the 'Action'
 constructor, and can make use of ``self.queue``, a registry of all the
@@ -184,8 +89,10 @@ discarded action is combined.
 
 Note that the combination occurs when the action is logged. If an action is
 combined / discarded, it is not placed into the queue. The queue is saved to
-the database when a request finishes, after Grouping_ takes palce.
+the database when a request finishes, after Grouping_ takes place.
 
+
+.. _grouping:
 
 Grouping
 --------
@@ -204,9 +111,13 @@ argument.
 
 By default, an action is considered 'similar' if it has the same actor, and at
 least the same `targets` or `related` objects. This can be customized by
+overriding the ``group`` method in the ``ActionHandler`` subclass relative to
+the relevant action.
 
 Grouping only occurs when the action queue is saved.
 
+
+.. _deleted-items:
 
 Deleted items
 -------------
@@ -248,8 +159,8 @@ where ``object`` is the object being deleted. The value stored in
 Read / unread actions
 ---------------------
 
-When the ``TRACK_UNREAD`` setting_ is set to ``True``, ``django-actrack``
-can make the distinction between read and unread actions.
+When the ``TRACK_UNREAD`` :ref:`setting <settings>` is set to ``True``,
+``django-actrack`` can make the distinction between read and unread actions.
 
 When a new action is created, it is simply considered ad unread by all users.
 
@@ -278,3 +189,6 @@ can be overridden in subclasses of ``ActionHandler``.
 
 The ``ActionHandler.get_context`` method generates a useful default context
 dictionary from the attached action data.
+
+
+.. _`actrack.handler module`: https://bitbucket.org/tkhyn/django-actrack/src/release/actrack/handler.py

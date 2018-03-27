@@ -1,3 +1,5 @@
+.. _quick-start:
+
 Quick start
 ===========
 
@@ -107,8 +109,9 @@ tracking (trains, airplanes, cars, anything ...)
 Next steps
 ..........
 
-Want to track more trains? Head to the :ref:`features` page to discover all the
-advanced stuff ``django-actrack`` can offer,
+Want to track more trains? Head to the :ref:`advanced` page to discover all the
+advanced stuff ``django-actrack`` can offer, or check out the :ref:`api` and the
+:ref:`settings`.
 
 
 .. _AUTH_USER_MODEL: https://docs.djangoproject.com/en/2.0/ref/settings/#std:setting-AUTH_USER_MODEL
