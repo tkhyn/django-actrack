@@ -19,7 +19,7 @@ def connect(*args, **kwargs):
 
     """
 
-    # to avoid django 1.9+ complaining about apps not loaded yet
+    # to avoid django complaining about apps not loaded yet
     from .gfk import add_relation
     from .models import Action, Tracker, GM2M_ATTRS
     from .managers.inst import InstActionManager, InstTrackerManager
@@ -56,7 +56,7 @@ def connect(*args, **kwargs):
             for attr in GM2M_ATTRS:
                 descriptor = getattr(Action, attr)
                 descriptor.add_relation(cls, on_delete=on_delete_tgt)
-                descriptor.field.rel.on_delete_src = on_delete_src
+                descriptor.field.remote_field.on_delete_src = on_delete_src
 
             # adding actions and trackers managers
             for name, mngr in ((ACTIONS_ATTR, InstActionManager),

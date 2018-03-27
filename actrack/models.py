@@ -25,7 +25,8 @@ class Action(models.Model):
     may be related to other objects
     """
 
-    actor_ct = models.ForeignKey(ContentType, null=True)
+    actor_ct = models.ForeignKey(ContentType, on_delete=models.CASCADE,
+                                 null=True)
     actor_pk = models.CharField(max_length=255, null=True)
     actor = GenericForeignKey('actor_ct', 'actor_pk')
 
@@ -164,7 +165,8 @@ class UnreadTracker(models.Model):
     A model to keep track of unread actions for each user
     """
 
-    user = OneToOneField(USER_MODEL, related_name='unread_actions')
+    user = OneToOneField(USER_MODEL, on_delete=models.CASCADE,
+                         related_name='unread_actions')
 
     unread_actions = models.ManyToManyField(Action, related_name='unread_in')
 
@@ -259,9 +261,10 @@ class Tracker(models.Model, TrackerBase):
 
     # hidden relation (made accessible through the model instance's 'tracker'
     # attribute and its methods)
-    user = models.ForeignKey(USER_MODEL, related_name='trackers+')
+    user = models.ForeignKey(USER_MODEL, on_delete=models.CASCADE,
+                             related_name='trackers+')
 
-    tracked_ct = models.ForeignKey(ContentType)
+    tracked_ct = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     # tracked_pk supports null value to refer to the model class only
     tracked_pk = models.CharField(null=True, max_length=255)
     tracked = ModelGFK('tracked_ct', 'tracked_pk')
@@ -345,7 +348,7 @@ class DeletedItem(models.Model):
     need to be linked by Action instances
     """
 
-    ctype = models.ForeignKey(ContentType)
+    ctype = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     description = models.CharField(max_length=255)
     serialization = JSONField()
 

@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='action',
             name='actor_ct',
-            field=models.ForeignKey(to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE, null=True),
         ),
         migrations.AlterField(
             model_name='action',

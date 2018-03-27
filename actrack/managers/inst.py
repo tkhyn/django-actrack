@@ -104,8 +104,8 @@ class InstActionManager(InstActrackManager):
     def _get_relation(self, name):
 
         # find the relation
-        for rel in getattr(Action, name).field.rel.rels:
-            if rel.to == self.instance_model:
+        for rel in getattr(Action, name).field.remote_field.rels:
+            if rel.model == self.instance_model:
                 return rel
         else:
             raise ImproperlyConfigured(

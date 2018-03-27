@@ -2,14 +2,8 @@
 Descriptors to be used as attributes for models.
 """
 
-try:
-    # django 1.11
-    from django.db.models.fields.related_descriptors \
-        import ReverseOneToOneDescriptor as OriginalReverseOneToOneDescriptor
-except ImportError:
-    from django.db.models.fields.related \
-        import SingleRelatedObjectDescriptor as OriginalReverseOneToOneDescriptor
-
+from django.db.models.fields.related_descriptors \
+    import ReverseOneToOneDescriptor as OriginalReverseOneToOneDescriptor
 from django.db.transaction import atomic
 
 
@@ -34,6 +28,7 @@ class ReverseOneToOneDescriptor(OriginalReverseOneToOneDescriptor):
             model.objects.using(instance._state.db) \
                 .get_or_create(**{self.related.field.name: instance})
             try:
+                # django < 2.0
                 delattr(instance, self.cache_name)
             except AttributeError:
                 pass
