@@ -92,14 +92,14 @@ class TrackerManagerTests(ManagerTests):
                             set([self.user2]))
         self.assertEqual(self.task2.trackers.users().count(), 0)
 
-    def owned(self):
+    def test_owned(self):
         with self.assertRaises(TypeError):
             self.project.trackers.owned()
         self.assertEqual(self.user0.trackers.owned().count(), 1)
         self.assertEqual(self.user1.trackers.owned().count(), 0)
         self.assertEqual(self.user2.trackers.owned().count(), 1)
 
-    def tracked(self):
+    def test_tracked(self):
         self.assertSetEqual(set(self.user0.trackers.tracked()),
                             set([self.user1]))
         self.assertSetEqual(set(self.user2.trackers.tracked()),
