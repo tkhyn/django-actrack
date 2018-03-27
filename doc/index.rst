@@ -1,15 +1,30 @@
-.. django-actrack documentation master file, created by
-   sphinx-quickstart on Tue Mar 27 21:36:25 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. django-actrack documentation master file
 
-Welcome to django-actrack's documentation!
-==========================================
+django-actrack
+==============
+
+|copyright| 2014-2018 Thomas Khyn
+
+``django-actrack`` is an activity tracker for the Django framework. It enables
+recording any activity by any actor, relative to any number of targets or
+related objects, with or without additional data. The activity can then be
+retrieved through feeds associated to any instance linked to any action(s).
+
+It has been tested with Django 1.11 and 2.0 and the latest minor versions
+of Python 2 and 3 (Django 2.0 only supports Python 3).
+
+If you like django-actrack and are looking for a way to thank its creator and/or
+encourage future development, here is a BTC or BCH donation address:
+``1EwENyR8RV6tMc1hsLTkPURtn5wJgaBfG9``.
+
+Documentation contents:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
+   quick_start
+   features
+   settings
 
 
 Indices and tables
@@ -18,3 +33,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. |copyright| unicode:: 0xA9
