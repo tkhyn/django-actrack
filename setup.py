@@ -46,8 +46,8 @@ setup(
     ],
     packages=find_packages(exclude=('tests',)),
     install_requires=(
-        'django>=1.8',
-        'django-gm2m>=0.4.9',
+        'django>=1.11',
+        'django-gm2m>=0.6',
         'jsonfield',
     ),
 )

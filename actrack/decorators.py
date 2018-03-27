@@ -19,7 +19,7 @@ def connect(*args, **kwargs):
 
     """
 
-    # to avoid django 1.9+ complaining about apps not loaded yet
+    # to avoid django complaining about apps not loaded yet
     from .gfk import add_relation
     from .models import Action, Tracker, GM2M_ATTRS
     from .managers.inst import InstActionManager, InstTrackerManager
