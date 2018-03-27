@@ -18,11 +18,17 @@ import os
 
 # -- Django setup ------------------------------------------------------------
 
-# We need to provide a settings module so that django apps can be initialized
-# This is needed for sphinx-autodoc
+# We need to configure the settings and initialise Django so that sphinx-autodoc
+# can load the modules in the app
 
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests._settings')
+from django.conf import settings
+
+settings.configure(INSTALLED_APPS=(
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'actrack'
+))
 django.setup()
 
 # -- Project information -----------------------------------------------------
