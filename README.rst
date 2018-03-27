@@ -5,6 +5,16 @@ django-actrack
 
 An activity tracker for django.
 
+``django-actrack`` is an activity tracker. It enables recording any activity by
+any actor, relative to any number of targets or related objects, with or without
+additional data. The activity can then be retrieved through custom feeds.
+
+It has been tested with Django 1.11 and 2.0 and the latest minor versions
+of Python 2 and 3 (Django 2.0 only supports Python 3).
+
+If you like django-actrack and are looking for a way to thank its creator and/or
+encourage future development, here is a BTC or BCH donation address:
+``1EwENyR8RV6tMc1hsLTkPURtn5wJgaBfG9``.
 
 Features
 --------
@@ -17,7 +27,6 @@ Features
 - Deleted items do not disappear from the activity tracker
 - Unread/read status actions
 - Actions grouping when similar actions occur close to one another
-- Works with Django 1.7+ and matching Python versions (2.7 to 3.4)
 
 Installation
 ------------
@@ -40,7 +49,7 @@ Let's generate some. We use ``actrack.log``::
    actrack.log(user, 'had_lunch')
 
 ``user`` could as well be any instance of any model, it does not have to be a
-user. Could be a train, for example.
+user. Could be a train, for example (though trains usually don't have lunch).
 
 You can also provide targets and related objects::
 
@@ -61,8 +70,7 @@ every matching action. In that case, anything that concerns ``train``.
 ``train`` could have been any other instance of any other model, or even a
 model class itself to follow any instance of that model, but ``user`` must be
 an instance of the ``USER_MODEL`` specified in the Settings_ (which defaults
-to the ``AUTH_USER_MODEL`` in Django 1.6+ or ``auth.User`` in previous Django
-versions).
+to ``AUTH_USER_MODEL``).
 
 To retrieve every action matching this tracker, ``django-actrack`` provides
 convenient accessors, provided you have connected the model to it beforehand::
@@ -73,7 +81,8 @@ convenient accessors, provided you have connected the model to it beforehand::
 
 However, it is not always possible to use this decorator in this manner. The
 most common example is ``auth.User``. We therefore use ``connect`` as a simple
-function, somewhere in our app so that it is executed when it is loaded::
+function, somewhere in our app (for example in an ``AppConfig`` subclass'
+``ready()`` method) so that it is executed when it is loaded::
 
    actrack.connect(UserModel)
 
@@ -82,7 +91,6 @@ of the model. We'll be able to do::
 
    for action in user.actions.feed():
       # iterate over all the actions user is tracking
-
 
 ``actions`` and ``trackers`` accessors
 --------------------------------------
@@ -291,8 +299,6 @@ Grouping only occurs when the action queue is saved.
 Deleted items
 -------------
 
-Django > 1.6 only.
-
 This is a great feature of ``django-actrack``. If an object to which an action
 is related (the object can be the actor, a target or related object) is
 deleted, the action itself can either be deleted (if passing
@@ -372,7 +378,7 @@ a dictionary name ``ACTRACK``. This dictionary may contain the following items:
 
 USER_MODEL
    The user model that should be used for the owners of the tracker instances.
-   Defaults to Django's ``AUTH_USER_MODEL`` (>=1.6) or ``auth.User`` (<1.6)
+   Defaults to Django's ``AUTH_USER_MODEL``
 
 ACTIONS_ATTR
    The name of the accessor for actions, that can be changed in case it clashes
