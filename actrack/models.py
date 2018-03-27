@@ -21,27 +21,37 @@ GM2M_ATTRS = ('targets', 'related')
 
 class Action(models.Model):
     """
-    Describes an action, initiated by an actor on target objects, and that
-    may be related to other objects
+    An action initiated by an actor and described by a verb.
+    An action may have:
+    - target objects (affected by the action)
+    - related objects (related to the action)
     """
 
     actor_ct = models.ForeignKey(ContentType, on_delete=models.CASCADE,
                                  null=True)
     actor_pk = models.CharField(max_length=255, null=True)
+    #: The actor, can be anything
     actor = GenericForeignKey('actor_ct', 'actor_pk')
 
     # using hidden relations so that the related objects' model classes are
     # not cluttered. The reverse relations are available through the
     # RelatedModel's ``actions`` attribute (as a manager) and its methods
+
+    #: The target objects, can contain several objects of different types
     targets = GM2MField(pk_maxlength=PK_MAXLENGTH,
                         related_name='actions_as_target+')
+    #: The related objects, can also contain several objects of different types
     related = GM2MField(pk_maxlength=PK_MAXLENGTH,
                         related_name='actions_as_related+')
 
+    #: The action's verb or identifier
     verb = models.CharField(max_length=255)
+    #: The action's level
     level = models.PositiveSmallIntegerField(default=DEFAULT_LEVEL)
+    #: Data associated to the action (stored in a JSON field)
     data = JSONField(default={})
 
+    #: The timestamp of the action, from which actions are ordered
     timestamp = models.DateTimeField(default=now)
 
     # default manager
@@ -261,16 +271,21 @@ class Tracker(models.Model, TrackerBase):
 
     # hidden relation (made accessible through the model instance's 'tracker'
     # attribute and its methods)
+    #: The user to which the tracker instance is attached
     user = models.ForeignKey(USER_MODEL, on_delete=models.CASCADE,
                              related_name='trackers+')
 
     tracked_ct = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     # tracked_pk supports null value to refer to the model class only
     tracked_pk = models.CharField(null=True, max_length=255)
+    #: The tracked object
     tracked = ModelGFK('tracked_ct', 'tracked_pk')
 
+    #: All the verbs that are tracked (when empty, that means 'all verbs')
     verbs = VerbsField(max_length=1000)
 
+    #: Should the tracker only track actions where the tracked object is the
+    #: actor?
     actor_only = models.BooleanField(default=True)
 
     # unread Actions tracking
@@ -348,8 +363,12 @@ class DeletedItem(models.Model):
     need to be linked by Action instances
     """
 
+    #: The deleted instance's content type
     ctype = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    #: The deleted instance's description when the instance was deleted
     description = models.CharField(max_length=255)
+    #: The deleted instance's serialization in JSON when the instance was
+    #: deleted
     serialization = JSONField()
 
     registry = DelItemsRegistry()
