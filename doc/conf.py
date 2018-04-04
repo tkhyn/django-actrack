@@ -40,7 +40,7 @@ author = u'Thomas Khyn'
 from actrack import __version__
 
 # The short X.Y version.
-version = __version__
+version = __version__[:3]
 # The full version, including alpha/beta/rc tags.
 release = version
 
