@@ -43,4 +43,4 @@ Indices and tables
 
 .. |copyright| unicode:: 0xA9
 
-.. _`source code`: https://bitbucket.org/tkhyn/django-actrack/src
+.. _`source code`: https://github.com/tkhyn/django-actrack/src

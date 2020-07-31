@@ -39,5 +39,5 @@ the description of all django-actrack's advanced features.
 
 .. |copyright| unicode:: 0xA9
 
-.. _django-gm2m: https://bitbucket.org/tkhyn/django-gm2m
+.. _django-gm2m: https://github.com/tkhyn/django-gm2m
 .. _readthedocs: http://django-actrack.readthedocs.io/en/stable

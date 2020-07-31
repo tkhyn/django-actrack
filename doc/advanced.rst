@@ -191,4 +191,4 @@ The ``ActionHandler.get_context`` method generates a useful default context
 dictionary from the attached action data.
 
 
-.. _`actrack.handler module`: https://bitbucket.org/tkhyn/django-actrack/src/release/actrack/handler.py
+.. _`actrack.handler module`: https://github.com/tkhyn/django-actrack/src/release/actrack/handler.py
