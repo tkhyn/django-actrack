@@ -34,7 +34,7 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = u'django-actrack'
-copyright = u'2014-2018, Thomas Khyn'
+copyright = u'2014-2020, Thomas Khyn'
 author = u'Thomas Khyn'
 
 from actrack import __version__

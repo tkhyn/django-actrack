@@ -3,7 +3,7 @@
 django-actrack
 ==============
 
-|copyright| 2014-2018 Thomas Khyn
+|copyright| 2014-2020 Thomas Khyn
 
 ``django-actrack`` is an activity tracker for the Django framework. It enables
 recording any activity by any actor, relative to any number of targets or
