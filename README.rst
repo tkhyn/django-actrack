@@ -8,11 +8,10 @@ recording any activity by any actor, relative to any number of targets or
 related objects, with or without additional data. The activity can then be
 retrieved through custom feeds.
 
-It has been tested with Django 1.11 and 2.0 and the latest minor versions
-of Python 2 and 3 (Django 2.0 only supports Python 3).
+It has been tested with Django 2.2.* and 3.0.* and their matching Python versions (3.5 to 3.8).
 
-If you like django-actrack and are looking for a way to thank its creator and/or
-encourage future development, here is a BTC or BCH donation address:
+If you like django-actrack and find it useful, you may want to thank me and
+encourage future development by sending a few mBTC / mBCH / mBSV at this address:
 ``1EwENyR8RV6tMc1hsLTkPURtn5wJgaBfG9``.
 
 Features
