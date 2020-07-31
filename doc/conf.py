@@ -12,7 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
+# import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -34,13 +34,13 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = u'django-actrack'
-copyright = u'2014-2018, Thomas Khyn'
+copyright = u'2014-2020, Thomas Khyn'
 author = u'Thomas Khyn'
 
 from actrack import __version__
 
 # The short X.Y version.
-version = __version__
+version = __version__[:3]
 # The full version, including alpha/beta/rc tags.
 release = version
 

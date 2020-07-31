@@ -1,7 +1,6 @@
 import warnings
 
 from django.utils.timezone import now
-from django.utils import six
 from django.utils.translation import ugettext as _
 from django.db.models import Q
 from django.db import router
@@ -34,7 +33,7 @@ def create_action(verb, **kwargs):
         verb = verb._proxy__args[0]
     except (AttributeError, IndexError):
         pass
-    kwargs['verb'] = six.text_type(verb)
+    kwargs['verb'] = str(verb)
 
     for attr in GM2M_ATTRS:
         kwargs[attr] = to_set(kwargs.pop(attr, None))
@@ -111,7 +110,7 @@ def track(user, to_track, log=False, **kwargs):
     # modify existing matching trackers if needed
     for tracker in trackers:
         changed = []
-        for k, v in six.iteritems(kwargs):
+        for k, v in kwargs.items():
             if getattr(tracker, k, None) != v:
                 changed.append(k)
             setattr(tracker, k, v)

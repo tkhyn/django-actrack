@@ -2,6 +2,13 @@ django-actrack - changes
 ========================
 
 
+v1.0 (01-08-2020)
+-----------------
+
+- django 3.0 support
+- drop django < 2.2 support
+
+
 v0.4 (28-03-2018)
 -----------------
 

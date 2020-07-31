@@ -1,18 +1,17 @@
 django-actrack
 ==============
 
-|copyright| 2014-2018 Thomas Khyn
+|copyright| 2014-2020 Thomas Khyn
 
 ``django-actrack`` is an activity tracker for the Django framework. It enables
 recording any activity by any actor, relative to any number of targets or
 related objects, with or without additional data. The activity can then be
 retrieved through custom feeds.
 
-It has been tested with Django 1.11 and 2.0 and the latest minor versions
-of Python 2 and 3 (Django 2.0 only supports Python 3).
+It has been tested with Django 2.2.* and 3.0.* and their matching Python versions (3.5 to 3.8).
 
-If you like django-actrack and are looking for a way to thank its creator and/or
-encourage future development, here is a BTC or BCH donation address:
+If you like django-actrack and find it useful, you may want to thank me and
+encourage future development by sending a few mBTC / mBCH / mBSV at this address:
 ``1EwENyR8RV6tMc1hsLTkPURtn5wJgaBfG9``.
 
 Features
@@ -40,5 +39,5 @@ the description of all django-actrack's advanced features.
 
 .. |copyright| unicode:: 0xA9
 
-.. _django-gm2m: https://bitbucket.org/tkhyn/django-gm2m
+.. _django-gm2m: https://github.com/tkhyn/django-gm2m
 .. _readthedocs: http://django-actrack.readthedocs.io/en/stable

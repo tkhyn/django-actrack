@@ -1,7 +1,5 @@
 import warnings
 
-from django.utils import six
-
 # exposes CASCADE, CASCADE_SIGNAL, etc ...
 from gm2m.deletion import *
 
@@ -26,7 +24,7 @@ def get_del_item(instance):
         try:
             description = instance.deleted_item_description()
         except AttributeError:
-            description = six.text_type(instance)
+            description = str(instance)
             warnings.warn(
                 'Description for an instance of model "%s.%s" was '
                 'generated from implicit conversion to string. You may '
