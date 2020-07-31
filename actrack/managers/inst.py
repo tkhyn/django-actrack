@@ -11,7 +11,6 @@ from collections import defaultdict
 from django.db.models import Q, Manager
 from django.db import router
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.six import iteritems, string_types
 from django.apps import apps
 
 from ..models import Action, Tracker, GM2M_ATTRS
@@ -182,13 +181,13 @@ class InstActionManager(InstActrackManager):
         q = Q()
 
         # first we take care of actors
-        for ct, pk_verbs in iteritems(actors_by_ct):
-            for pk, verbs in iteritems(pk_verbs):
+        for ct, pk_verbs in actors_by_ct.items():
+            for pk, verbs in pk_verbs.items():
                 q = q | Q(**mk_kws('actor', ct, pk, verbs=verbs))
 
         # now we take care of targets and related objects
-        for ct, pk_verbs in iteritems(others_by_ct):
-            for pk, verbs in iteritems(pk_verbs):
+        for ct, pk_verbs in others_by_ct.items():
+            for pk, verbs in pk_verbs.items():
                 subq = Q(**mk_kws('action_targets__gm2m', ct, pk)) | \
                        Q(**mk_kws('action_related__gm2m', ct, pk))
                 if verbs:
@@ -268,7 +267,7 @@ class InstTrackerManager(InstActrackManager):
                 'user.')
 
         verbs = kwargs.pop('verbs', [])
-        if isinstance(verbs, string_types):
+        if isinstance(verbs, str):
             verbs = [verbs]
 
         qs = self.owned(**kwargs) \

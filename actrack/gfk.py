@@ -6,7 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import DEFAULT_DB_ALIAS
-from django.utils import six
 
 from gm2m.signals import deleting
 
@@ -135,7 +134,7 @@ class ActrackGenericRelation(GenericRelation):
             q = Q()
             ct_field_name = '%s__pk' % self.content_type_field_name
             pk_field_name_in = "%s__in" % self.object_id_field_name
-            for ct, pks in six.iteritems(objs_by_ct):
+            for ct, pks in objs_by_ct.items():
                 q = q | Q(**{
                     ct_field_name: ct,
                     pk_field_name_in: pks
@@ -144,7 +143,7 @@ class ActrackGenericRelation(GenericRelation):
             # GM2M relations for action model
             for attname in ('targets', 'related'):
                 if hasattr(base_mngr.model, attname):
-                    for ct, pks in six.iteritems(objs_by_ct):
+                    for ct, pks in objs_by_ct.items():
                         q = q | Q(**{
                             'action_%s__gm2m_ct__pk' % attname: ct,
                             'action_%s__gm2m_pk__in' % attname: pks

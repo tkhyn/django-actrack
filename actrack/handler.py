@@ -7,7 +7,6 @@ from datetime import timedelta
 from copy import copy
 
 from django.utils.translation import ugettext as _, ungettext as _n
-from django.utils import six
 from django.utils.timesince import timesince
 
 from .helpers import str_enum
@@ -80,7 +79,7 @@ class ActionHandlerMetaclass(type):
         return thread_actions_queue
 
 
-class ActionHandler(six.with_metaclass(ActionHandlerMetaclass)):
+class ActionHandler(metaclass=ActionHandlerMetaclass):
 
     verb = None
     level = DEFAULT_LEVEL

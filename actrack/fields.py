@@ -3,7 +3,6 @@ Defines an improved OneToOneField and a VerbsField
 """
 
 from django.db import models
-from django.utils import six
 
 from .descriptors import ReverseOneToOneDescriptor
 
@@ -34,7 +33,7 @@ class VerbsField(models.TextField):
             kwargs['token'] = self.token
         return name, path, args, kwargs
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection):
         if value is None:
             return set()
         return set(value.split(self.token))
@@ -42,7 +41,7 @@ class VerbsField(models.TextField):
     def to_python(self, value):
         if not value:
             return set()
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             return set(value.split(self.token))
         return set(value)
 
